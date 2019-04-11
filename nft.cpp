@@ -672,6 +672,77 @@ ACTION nft::delmapping(name owner, id_type fromid, id_type chainid)
     assetmap_tables.erase(nftmap_find);
 }
 
+ACTION nft::createorder(name owner, id_type id, asset amount, std::string side, std::string memo)
+{
+    check(is_account(owner), "issuer account does not exist");
+    require_auth(owner);
+
+    check(side == "buy" || side == "sell", "side must eq buy or sell");
+    check(memo.size() <= 256, "memo has more than 256 bytes");
+    check(amount.is_valid(), "invalid symbol name");
+    check(amount.amount > 0, "amount must be positive");
+    check(amount.symbol.code().to_string() == "EOS", "currency must be EOS");
+
+    auto asset_iter = nft_tables.find(id);
+    check(asset_iter != nft_tables.end(), "asset does not exist");
+    check(asset_iter->owner == owner, "owner is not equal");
+
+    auto status_iter = index_tables.find(id);
+    check(status_iter != index_tables.end(), "nft index does not exist");
+    check(status_iter->status == 1, "nft status is close, can't place order");
+
+    auto order_iter = order_tables.find(id);
+    check(order_iter == order_tables.end(), "nft has already in orders");
+
+    order_tables.emplace(owner, [&](auto& order) {
+        order.nftid = id;
+        order.owner = owner;
+        order.price = amount;
+        order.side = side;
+        order.memo = memo;
+        order.createtime = time_point_sec(current_time_point());
+    });
+}
+
+ACTION nft::cancelorder(name owner, id_type id)
+{
+    check(is_account(owner), "issuer account does not exist");
+    require_auth(owner);
+
+    auto iter = order_tables.find(id);
+    check(iter != order_tables.end(), "order is not exist");
+    check(iter->owner == owner, "owner is not equal");
+    order_tables.erase(iter);
+}
+
+ACTION nft::trade(name from, name to, id_type id, std::string memo)
+{
+    check(is_account(from), "issuer account does not exist");
+    require_auth(from);
+    require_auth(to);
+    check(memo.size() <= 256, "memo has more than 256 bytes");
+
+    auto order_iter = order_tables.find(id);
+    check(order_iter != order_tables.end(), "order is not exist");
+    order_tables.erase(order_iter);
+
+    auto nft_iter = nft_tables.find(id);
+    check(nft_iter != nft_tables.end(), "nft asset is not exist");
+    check(nft_iter->owner == from, "owner is not equal");
+
+    auto status_iter = index_tables.find(id);
+    check(status_iter != index_tables.end(), "nft index does not exist");
+    check(status_iter->status == 1, "nft status is close");
+
+    transfer(from, to, id, memo);
+
+    // action(
+    //     permission_level{ from, "active"_n },
+    //     "eosio.token"_n, "transfer"_n,
+    //     std::make_tuple(from, to, order_iter->price, memo)
+    // ).send();
+}
+
 EOSIO_DISPATCH(nft, (addadmin)(deladmin)(create)(createother)(addaccauth)(delaccauth)(addnftauth)(delnftauth)
     (transfer)(addchain)(setchain)(addcompattr)(delcompattr)(setcompose)(delcompose)(addgame)(setgame)(editgame)
-    (delgame)(addgameattr)(editgameattr)(delgameattr)(addmapping)(delmapping)(burn))
+    (delgame)(addgameattr)(editgameattr)(delgameattr)(addmapping)(delmapping)(burn)(createorder)(cancelorder)(trade))

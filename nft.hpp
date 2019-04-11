@@ -32,7 +32,8 @@ CONTRACT nft : public eosio::contract
             admin_tables(receiver, receiver.value),
             composeattr_tables(receiver, receiver.value),
             index_tables(receiver, receiver.value),
-            nftnumber_tables(receiver, receiver.value)
+            nftnumber_tables(receiver, receiver.value),
+            order_tables(receiver, receiver.value)
         {}
        
         ACTION addadmin(name admin);
@@ -66,6 +67,10 @@ CONTRACT nft : public eosio::contract
         ACTION addgameattr(name owner, id_type gameid, std::string key, std::string value);
         ACTION editgameattr(name owner, id_type gameid, std::string key, std::string value);
         ACTION delgameattr(name owner, id_type gameid, std::string key);
+
+        ACTION createorder(name owner, id_type id, asset amount, std::string side, std::string memo);
+        ACTION cancelorder(name owner, id_type id);
+        ACTION trade(name from, name to, id_type id, std::string memo);
 
         TABLE admins
         {
@@ -175,6 +180,19 @@ CONTRACT nft : public eosio::contract
             uint64_t get_index() const { return index; }
         };
 
+       TABLE order 
+       {
+            id_type         nftid;
+            name            owner;
+            asset           price;
+            std::string     side;
+            std::string     memo;
+            time_point_sec  createtime;
+
+            uint64_t primary_key() const { return nftid; }
+            //uint64_t get_owner() const { return owner.value; }
+        };
+
         using admins_index = eosio::multi_index<"admins"_n, admins>;
 
         using nftindex_index = eosio::multi_index<"nftindexs"_n, nftindexs,
@@ -208,6 +226,8 @@ CONTRACT nft : public eosio::contract
             indexed_by< "bytargetid"_n, const_mem_fun< assetmaps, uint64_t, &assetmaps::get_targetid> >,
             indexed_by< "bychainid"_n, const_mem_fun< assetmaps, uint64_t, &assetmaps::get_chainid> > >;
 
+        using order_index = eosio::multi_index<"orders"_n, order>;
+
     private:
         admins_index        admin_tables;
         nftnumber_index     nftnumber_tables;
@@ -219,5 +239,6 @@ CONTRACT nft : public eosio::contract
         compose_index       compose_tables;
         nftgame_index       game_tables;
         assetmaps_index     assetmap_tables;
+        order_index         order_tables;
 };
 
