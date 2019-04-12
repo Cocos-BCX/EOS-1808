@@ -672,30 +672,46 @@ ACTION nft::delmapping(name owner, id_type fromid, id_type chainid)
     assetmap_tables.erase(nftmap_find);
 }
 
-ACTION nft::createorder(name owner, id_type id, asset amount, std::string side, std::string memo)
+ACTION nft::createorder(name owner, id_type nftid, asset amount, std::string side, std::string memo)
 {
     check(is_account(owner), "issuer account does not exist");
     require_auth(owner);
 
+    //param check
     check(side == "buy" || side == "sell", "side must eq buy or sell");
     check(memo.size() <= 256, "memo has more than 256 bytes");
     check(amount.is_valid(), "invalid symbol name");
     check(amount.amount > 0, "amount must be positive");
     check(amount.symbol.code().to_string() == "EOS", "currency must be EOS");
 
-    auto asset_iter = nft_tables.find(id);
-    check(asset_iter != nft_tables.end(), "asset does not exist");
-    check(asset_iter->owner == owner, "owner is not equal");
-
-    auto status_iter = index_tables.find(id);
+    //nft status check
+    auto status_iter = index_tables.find(nftid);
     check(status_iter != index_tables.end(), "nft index does not exist");
     check(status_iter->status == 1, "nft status is close, can't place order");
 
-    auto order_iter = order_tables.find(id);
-    check(order_iter == order_tables.end(), "nft has already in orders");
+    //nft check
+    auto asset_iter = nft_tables.find(nftid);
+    check(asset_iter != nft_tables.end(), "asset does not exist");
+
+    if (side == "sell") {
+        check(asset_iter->owner == owner, "can't sell other nft asset");
+        auto order_data = order_tables.get_index<"bynftid"_n>();
+        auto iter = order_data.lower_bound(nftid);
+        bool isValid = true;
+        for( ; iter != order_data.end() && iter->nftid == nftid; ++iter){
+            if(iter->side == "sell") {
+                isValid = false;  //one nft one sell
+                break;  
+            }
+        }
+        check(isValid, "nft sell order is not valid");
+    } else {
+        check(asset_iter->owner != owner, "Can't buy your own nft asset");
+    }
 
     order_tables.emplace(owner, [&](auto& order) {
-        order.nftid = id;
+        order.id = order_tables.available_primary_key();
+        order.nftid = nftid;
         order.owner = owner;
         order.price = amount;
         order.side = side;
@@ -704,7 +720,7 @@ ACTION nft::createorder(name owner, id_type id, asset amount, std::string side, 
     });
 }
 
-ACTION nft::cancelorder(name owner, id_type id)
+ACTION nft::cancelorder(name owner, int64_t id)
 {
     check(is_account(owner), "issuer account does not exist");
     require_auth(owner);
@@ -712,7 +728,14 @@ ACTION nft::cancelorder(name owner, id_type id)
     auto iter = order_tables.find(id);
     check(iter != order_tables.end(), "order is not exist");
     check(iter->owner == owner, "owner is not equal");
+
+    auto status_iter = index_tables.find(iter->nftid);
+    check(status_iter != index_tables.end(), "nft index does not exist");
+    check(status_iter->status == 1, "nft status is close, can't place order");
+
     order_tables.erase(iter);
+
+    //transfer
 }
 
 ACTION nft::trade(name from, name to, id_type id, std::string memo)
@@ -735,12 +758,44 @@ ACTION nft::trade(name from, name to, id_type id, std::string memo)
     check(status_iter->status == 1, "nft status is close");
 
     transfer(from, to, id, memo);
+    
+    //contractTransfer(get_self(), to, order_iter->price, memo)
+}
 
-    // action(
-    //     permission_level{ from, "active"_n },
-    //     "eosio.token"_n, "transfer"_n,
-    //     std::make_tuple(from, to, order_iter->price, memo)
-    // ).send();
+void nft::contractDeposit(name user, asset amount, std::string memo) 
+{
+    check(amount.amount > 0, "amount must be positive");
+    check(amount.symbol.code().to_string() == "EOS", "currency must be EOS");
+
+    action(
+        permission_level{user, "active"_n},
+        "eosio.token"_n, "transfer"_n,
+        std::make_tuple(user, _self, amount, memo)
+    ).send();
+}
+
+void nft::contractTransfer(name from, name to, asset amount, std::string memo)
+{
+    check(amount.amount > 0, "amount must be positive");
+    check(amount.symbol.code().to_string() == "EOS", "currency must be EOS");
+
+    action(
+        permission_level{from, "active"_n},
+        "eosio.token"_n, "transfer"_n,
+        std::make_tuple(from, to, amount, memo)
+    ).send();
+}
+
+void nft::contractWithdraw(name user, asset amount, std::string memo)
+{
+    check(amount.amount > 0, "amount must be positive");
+    check(amount.symbol.code().to_string() == "EOS", "currency must be EOS");
+
+    action(
+        permission_level{_self, "active"_n},
+        "eosio.token"_n, "transfer"_n,
+        std::make_tuple(_self, user, amount, memo)
+    ).send();
 }
 
 EOSIO_DISPATCH(nft, (addadmin)(deladmin)(create)(createother)(addaccauth)(delaccauth)(addnftauth)(delnftauth)

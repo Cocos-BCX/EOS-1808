@@ -16,6 +16,11 @@ typedef uint128_t uuid;
 typedef uint64_t id_type;
 typedef string uri_type;
 
+enum order_side {
+    BUY     =   0, 
+    SELL    =   1
+};
+
 CONTRACT nft : public eosio::contract 
 {
     public:
@@ -68,8 +73,8 @@ CONTRACT nft : public eosio::contract
         ACTION editgameattr(name owner, id_type gameid, std::string key, std::string value);
         ACTION delgameattr(name owner, id_type gameid, std::string key);
 
-        ACTION createorder(name owner, id_type id, asset amount, std::string side, std::string memo);
-        ACTION cancelorder(name owner, id_type id);
+        ACTION createorder(name owner, id_type nftid, asset amount, std::string side, std::string memo);
+        ACTION cancelorder(name owner, int64_t id);
         ACTION trade(name from, name to, id_type id, std::string memo);
 
         TABLE admins
@@ -182,6 +187,7 @@ CONTRACT nft : public eosio::contract
 
        TABLE order 
        {
+            int64_t         id;
             id_type         nftid;
             name            owner;
             asset           price;
@@ -189,8 +195,8 @@ CONTRACT nft : public eosio::contract
             std::string     memo;
             time_point_sec  createtime;
 
-            uint64_t primary_key() const { return nftid; }
-            //uint64_t get_owner() const { return owner.value; }
+            uint64_t primary_key() const { return id; }
+            uint64_t get_nftid() const { return nftid; }
         };
 
         using admins_index = eosio::multi_index<"admins"_n, admins>;
@@ -226,7 +232,13 @@ CONTRACT nft : public eosio::contract
             indexed_by< "bytargetid"_n, const_mem_fun< assetmaps, uint64_t, &assetmaps::get_targetid> >,
             indexed_by< "bychainid"_n, const_mem_fun< assetmaps, uint64_t, &assetmaps::get_chainid> > >;
 
-        using order_index = eosio::multi_index<"orders"_n, order>;
+        using order_index = eosio::multi_index<"orders"_n, order,
+            indexed_by<"bynftid"_n, const_mem_fun<order, uint64_t, &order::get_nftid> > >;
+
+    private:
+        void contractDeposit(name user, asset quantity, std::string memo);
+        void contractTransfer(name from, name to, asset quantity, std::string memo);
+        void contractWithdraw(name user, asset quantity, std::string memo);
 
     private:
         admins_index        admin_tables;
