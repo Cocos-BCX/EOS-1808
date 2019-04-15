@@ -16,13 +16,7 @@ typedef uint128_t uuid;
 typedef uint64_t id_type;
 typedef string uri_type;
 
-enum order_side {
-    BUY     =   0, 
-    SELL    =   1
-};
-
-CONTRACT nft : public eosio::contract 
-{
+CONTRACT nft : public eosio::contract {
     public:
         using contract::contract;
 
@@ -80,15 +74,13 @@ CONTRACT nft : public eosio::contract
         ACTION cancelorder(name owner, int64_t id);
         ACTION trade(name from, name to, id_type id, std::string memo);
 
-        TABLE admins
-        {
+        TABLE admins {
             name            admin;
 
             uint64_t primary_key() const { return admin.value; }
         };
 
-        TABLE nftindexs
-        {
+        TABLE nftindexs {
             id_type         id;
             id_type         status;
 
@@ -96,16 +88,14 @@ CONTRACT nft : public eosio::contract
             uint64_t get_status() const { return status; }
         };
 
-        TABLE nftnumber
-        {
+        TABLE nftnumber {
             name            owner;
             id_type         number;
 
             uint64_t primary_key() const { return owner.value; }
         };
 
-        TABLE nftts
-        {
+        TABLE nftts {
             id_type         id;
             name            creator;
             name            owner;
@@ -121,15 +111,13 @@ CONTRACT nft : public eosio::contract
             uint64_t get_creator() const { return creator.value; }
         };
 
-        TABLE composeattr
-        {
+        TABLE composeattr {
             id_type         nftid;
 
             uint64_t primary_key() const { return nftid; }
         };
         
-        TABLE accauth 
-        {
+        TABLE accauth {
             name            owner;
             name            auth;
 
@@ -137,8 +125,7 @@ CONTRACT nft : public eosio::contract
             uint64_t get_auth() const { return auth.value; }
         };
 
-        TABLE nftchains
-        {
+        TABLE nftchains {
             id_type         chainid;
             std::string     chain;
             id_type         status;
@@ -147,8 +134,7 @@ CONTRACT nft : public eosio::contract
             uint64_t get_status() const { return status; }
         };
 
-        TABLE composes
-        {
+        TABLE composes {
             id_type         id;
             id_type         firid;
             id_type         secid;
@@ -160,8 +146,7 @@ CONTRACT nft : public eosio::contract
             uint64_t get_status() const { return status; }
         };
 
-        TABLE assetmaps
-        {
+        TABLE assetmaps {
             id_type         mappingid;
             id_type         fromid;
             id_type         targetid;
@@ -173,8 +158,7 @@ CONTRACT nft : public eosio::contract
             uint64_t get_chainid() const { return chainid; }
         };
 
-        TABLE nftgame
-        {
+        TABLE nftgame {
             id_type         gameid;
             std::string     gamename;
             std::string     introduces;
@@ -188,8 +172,7 @@ CONTRACT nft : public eosio::contract
             uint64_t get_index() const { return index; }
         };
 
-       TABLE order 
-       {
+       TABLE order {
             int64_t         id;
             id_type         nftid;
             name            owner;

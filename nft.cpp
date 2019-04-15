@@ -2,8 +2,7 @@
 
 using namespace eosio;
 
-ACTION nft::addadmin(name admin) 
-{
+ACTION nft::addadmin(name admin) {
     require_auth(_self);
     check(is_account(admin), "admin account does not exist");
 
@@ -15,8 +14,7 @@ ACTION nft::addadmin(name admin)
     });
 }
 
-ACTION nft::deladmin(name admin) 
-{
+ACTION nft::deladmin(name admin) {
     require_auth(_self);
     check(is_account(admin), "admin account does not exist");
 
@@ -26,8 +24,7 @@ ACTION nft::deladmin(name admin)
     admin_tables.erase(admin_one);
 }
 
-ACTION nft::create(name creator, name owner, std::string explain, std::string worldview) 
-{
+ACTION nft::create(name creator, name owner, std::string explain, std::string worldview) {
     check(is_account(creator), "creator account does not exist");
     check(is_account(owner), "owner account does not exist");
     check(explain.size() <= 256, "explain has more than 256 bytes");
@@ -57,13 +54,11 @@ ACTION nft::create(name creator, name owner, std::string explain, std::string wo
     });
 
     auto nft_num = nftnumber_tables.find(owner.value);
-    if(nft_num != nftnumber_tables.end()){
+    if(nft_num != nftnumber_tables.end()) {
         nftnumber_tables.modify(nft_num, creator, [&](auto& nft_num_data) {
             nft_num_data.number = nft_num->number+1;
         });
-    }
-    else 
-    {
+    } else {
         nftnumber_tables.emplace(creator, [&](auto& nft_num_data) {
             nft_num_data.owner = owner;
             nft_num_data.number = 1;
@@ -71,8 +66,7 @@ ACTION nft::create(name creator, name owner, std::string explain, std::string wo
     }
 }
 
-ACTION nft::createother(name creator, name owner, std::string explain, std::string worldview, id_type chainid, id_type targetid) 
-{
+ACTION nft::createother(name creator, name owner, std::string explain, std::string worldview, id_type chainid, id_type targetid) {
     check(is_account(creator), "creator account does not exist");
     check(is_account(owner), "owner account does not exist");
     check(explain.size() <= 256, "explain has more than 64 bytes");
@@ -117,9 +111,7 @@ ACTION nft::createother(name creator, name owner, std::string explain, std::stri
         nftnumber_tables.modify(nftnum, creator, [&](auto& nftnum_data) {
             nftnum_data.number = nftnum->number+1;
         });
-    }
-    else 
-    {
+     } else {
         nftnumber_tables.emplace(creator, [&](auto& nftnum_data) {
             nftnum_data.owner = owner;
             nftnum_data.number = 1;
@@ -129,8 +121,7 @@ ACTION nft::createother(name creator, name owner, std::string explain, std::stri
     //print(time_now);
 }
 
-ACTION nft::addaccauth(name owner, name auth) 
-{
+ACTION nft::addaccauth(name owner, name auth) {
     require_auth(owner);
     check(is_account(auth), "account auth does not exist");
 
@@ -143,8 +134,7 @@ ACTION nft::addaccauth(name owner, name auth)
     });
 }
 
-ACTION nft::addnftattr(name owner, id_type nftid, std::string key, std::string value) 
-{
+ACTION nft::addnftattr(name owner, id_type nftid, std::string key, std::string value) {
     check(is_account(owner), "issuer account does not exist");
     require_auth(owner);
 
@@ -164,8 +154,7 @@ ACTION nft::addnftattr(name owner, id_type nftid, std::string key, std::string v
     });
 }
 
-ACTION nft::editnftattr(name owner, id_type nftid, std::string key, std::string value) 
-{
+ACTION nft::editnftattr(name owner, id_type nftid, std::string key, std::string value) {
     check(is_account(owner), "issuer account does not exist");
     require_auth(owner);
 
@@ -185,8 +174,7 @@ ACTION nft::editnftattr(name owner, id_type nftid, std::string key, std::string 
     }); 
 }
 
-ACTION nft::delnftattr(name owner, id_type nftid, string key) 
-{
+ACTION nft::delnftattr(name owner, id_type nftid, string key) {
     check(is_account(owner), "issuer account does not exist");
     require_auth(owner);
 
@@ -206,8 +194,7 @@ ACTION nft::delnftattr(name owner, id_type nftid, string key)
     }); 
 }
 
-ACTION nft::delaccauth(name owner) 
-{
+ACTION nft::delaccauth(name owner) {
     require_auth(owner);
     check(is_account(owner), "account auth does not exist");
 
@@ -217,8 +204,7 @@ ACTION nft::delaccauth(name owner)
     accauth_tables.erase(auth_find);
 }
 
-ACTION nft::addnftauth(name owner, name auth, id_type id)
-{
+ACTION nft::addnftauth(name owner, name auth, id_type id) {
     require_auth(owner);
     check(is_account(owner), "owner account auth does not exist");
     check(is_account(auth), "auth account auth does not exist");
@@ -226,7 +212,7 @@ ACTION nft::addnftauth(name owner, name auth, id_type id)
     auto nft_find_id = nft_tables.find(id);
     check(nft_find_id != nft_tables.end(), "nft id is not exist");
 
-    if(nft_find_id->owner != owner){
+    if(nft_find_id->owner != owner) {
         auto nft_accauth_find = accauth_tables.find(owner.value);
         check(nft_accauth_find != accauth_tables.end(), "account has not auth");
         check(nft_accauth_find->auth != owner, "account has not auth");
@@ -237,15 +223,14 @@ ACTION nft::addnftauth(name owner, name auth, id_type id)
     });
 }
 
-ACTION nft::delnftauth(name owner, id_type id)
-{
+ACTION nft::delnftauth(name owner, id_type id) {
     require_auth(owner);
     check(is_account(owner), "account auth does not exist");
 
     auto nft_find_id = nft_tables.find(id);
     check(nft_find_id != nft_tables.end(), "nft id is not exist");
 
-    if(nft_find_id->owner != owner){
+    if(nft_find_id->owner != owner) {
         auto nft_accauth_find = accauth_tables.find(owner.value);
         check(nft_accauth_find != accauth_tables.end(), "account has not auth"); 
         check(nft_accauth_find->auth != owner, "account has not auth");
@@ -256,8 +241,7 @@ ACTION nft::delnftauth(name owner, id_type id)
     });
 }
 
-ACTION nft::transfer(name from, name to, id_type id, std::string memo)
-{
+ACTION nft::transfer(name from, name to, id_type id, std::string memo) {
     require_auth(from);
     check(is_account(from), "from auth does not exist");
     check(is_account(to), "to auth does not exist");
@@ -267,8 +251,8 @@ ACTION nft::transfer(name from, name to, id_type id, std::string memo)
     check(nft_find_id != nft_tables.end(), "nft id is not exist");
 
     name owner_nft = nft_find_id->owner;
-    if(nft_find_id->owner != from){
-        if(nft_find_id->auth != from){
+    if(nft_find_id->owner != from) {
+        if(nft_find_id->auth != from) {
             auto nft_accauth_find = accauth_tables.find(nft_find_id->owner.value);
             check(nft_accauth_find != accauth_tables.end(), "from has not auth"); 
             check(nft_accauth_find->auth != from, "from has not auth"); 
@@ -281,24 +265,20 @@ ACTION nft::transfer(name from, name to, id_type id, std::string memo)
      });
 
     auto nftnum = nftnumber_tables.find(owner_nft.value);
-    if(nftnum->number != 1){
+    if(nftnum->number != 1) {
         nftnumber_tables.modify(nftnum,from, [&](auto& nftnum_data) {
             nftnum_data.number = nftnum->number-1;
         });
-    }
-    else 
-    {
+    } else {
         nftnumber_tables.erase(nftnum);
     }
 
     auto nfttonum = nftnumber_tables.find(to.value);
-    if(nfttonum != nftnumber_tables.end()){
+    if(nfttonum != nftnumber_tables.end()) {
         nftnumber_tables.modify(nfttonum, from, [&](auto& nftnum_data) {
             nftnum_data.number = nfttonum->number+1;
         });
-    }
-    else 
-    {
+    } else {
         nftnumber_tables.emplace(from, [&](auto& nftnum_data) {
             nftnum_data.owner = to;
             nftnum_data.number = 1;
@@ -306,8 +286,7 @@ ACTION nft::transfer(name from, name to, id_type id, std::string memo)
     }  
 }
 
-ACTION nft::burn(name owner, id_type nftid) 
-{
+ACTION nft::burn(name owner, id_type nftid) {
     check(is_account(owner), "issuer account does not exist");
     require_auth(owner);
 
@@ -320,13 +299,11 @@ ACTION nft::burn(name owner, id_type nftid)
     nft_tables.erase(nft_find);
 
     auto nftnum = nftnumber_tables.find(nft_find->owner.value);
-    if(nftnum->number != 1){
+    if(nftnum->number != 1) {
         nftnumber_tables.modify(nftnum,owner, [&](auto& nftnum_data) {
             nftnum_data.number = nftnum->number-1;
         });
-    }
-    else 
-    {
+    } else {
         nftnumber_tables.erase(nftnum);
     }
 
@@ -337,34 +314,33 @@ ACTION nft::burn(name owner, id_type nftid)
     }); 
 
     auto compose_find = composeattr_tables.find(nftid);
-    if(nft_find == nft_tables.end()){
+    if(nft_find == nft_tables.end()) {
         composeattr_tables.erase(compose_find);
     }
 
     auto compose_firid = compose_tables.get_index<"byfir"_n>();
     auto fir_iter = compose_firid.lower_bound(nftid);
-    for(; fir_iter != compose_firid.end() && fir_iter->firid == nftid; ++fir_iter){
+    for(; fir_iter != compose_firid.end() && fir_iter->firid == nftid; ++fir_iter) {
         auto fir_one = compose_tables.find(fir_iter->id);
         compose_tables.erase(fir_one);
     }
 
     auto compose_secid = compose_tables.get_index<"bysec"_n>();
     auto sec_iter = compose_secid.lower_bound(nftid);
-    for(; sec_iter != compose_secid.end() && sec_iter->secid == nftid; ++sec_iter){
+    for(; sec_iter != compose_secid.end() && sec_iter->secid == nftid; ++sec_iter) {
         auto sec_one = compose_tables.find(sec_iter->id);
         compose_tables.erase(sec_one);
     }
 
     auto assetmap_nft = assetmap_tables.get_index<"byfromid"_n>();
     auto iter = assetmap_nft.lower_bound(nftid);
-    for( ; iter != assetmap_nft.end() && iter->fromid == nftid; ++iter){
+    for( ; iter != assetmap_nft.end() && iter->fromid == nftid; ++iter) {
         auto asset_one = assetmap_tables.find(iter->mappingid);
         assetmap_tables.erase(asset_one);
     }
 }
 
-ACTION nft::addchain(name owner, std::string chain)
-{
+ACTION nft::addchain(name owner, std::string chain) {
     check(is_account(owner), "issuer account does not exist");
     check(chain.size() <= 64, "chain has more than 64 bytes");
     require_auth(owner);
@@ -376,7 +352,7 @@ ACTION nft::addchain(name owner, std::string chain)
 
     bool found = true;
     id_type id = 0;
-    for(; iter != nftchains_data.end() && iter->status == 1; ++iter){
+    for(; iter != nftchains_data.end() && iter->status == 1; ++iter) {
         if(iter->chain == chain) {
             id = iter->chainid;
             found = false;
@@ -392,8 +368,7 @@ ACTION nft::addchain(name owner, std::string chain)
     });
 }
 
-ACTION nft::setchain(name owner, id_type chainid, id_type status)
-{
+ACTION nft::setchain(name owner, id_type chainid, id_type status) {
     check(is_account(owner), "issuer account does not exist");
     require_auth(owner);
 
@@ -411,8 +386,7 @@ ACTION nft::setchain(name owner, id_type chainid, id_type status)
     });
 }
 
-ACTION nft::addcompattr(name owner, id_type id)
-{
+ACTION nft::addcompattr(name owner, id_type id) {
     check(is_account(owner), "issuer account does not exist");
     require_auth(owner);
 
@@ -430,8 +404,7 @@ ACTION nft::addcompattr(name owner, id_type id)
     });
 }
 
-ACTION nft::delcompattr(name owner, id_type id)
-{
+ACTION nft::delcompattr(name owner, id_type id) {
     check(is_account(owner), "issuer account does not exist");
     require_auth(owner);
 
@@ -443,8 +416,7 @@ ACTION nft::delcompattr(name owner, id_type id)
     composeattr_tables.erase(nft_find_id);
 }
 
-ACTION nft::setcompose(name owner, id_type firid, id_type secid)
-{
+ACTION nft::setcompose(name owner, id_type firid, id_type secid) {
     check(is_account(owner), "issuer account does not exist");
     require_auth(owner);
 
@@ -464,7 +436,7 @@ ACTION nft::setcompose(name owner, id_type firid, id_type secid)
     auto iter = compose_data.lower_bound(firid);
     bool found = true;
     id_type id = 0;
-    for(; iter != compose_data.end() && iter->firid == firid; ++iter){
+    for(; iter != compose_data.end() && iter->firid == firid; ++iter) {
         if(iter->secid == secid) {
             id = iter->id;
             found = false;
@@ -481,8 +453,7 @@ ACTION nft::setcompose(name owner, id_type firid, id_type secid)
     });
 }
 
-ACTION nft::delcompose(name owner, id_type firid, id_type secid)
-{
+ACTION nft::delcompose(name owner, id_type firid, id_type secid) {
     check(is_account(owner), "issuer account does not exist");
     require_auth(owner);
 
@@ -499,7 +470,7 @@ ACTION nft::delcompose(name owner, id_type firid, id_type secid)
     auto it = compose_data.lower_bound(firid);
     bool found = false;
     id_type id = 0;
-    for(; it!= compose_data.end() && it->firid==firid; ++it){
+    for(; it!= compose_data.end() && it->firid==firid; ++it) {
         if(it->secid == secid) {
             id = it->id;
             found = true;
@@ -512,8 +483,7 @@ ACTION nft::delcompose(name owner, id_type firid, id_type secid)
     compose_tables.erase(group_find_id);
 }
 
-ACTION nft::addgame(name owner, std::string gamename, std::string introduces) 
-{
+ACTION nft::addgame(name owner, std::string gamename, std::string introduces) {
     check(is_account(owner), "issuer account does not exist");
     require_auth(owner);
 
@@ -525,7 +495,7 @@ ACTION nft::addgame(name owner, std::string gamename, std::string introduces)
     auto game_data = game_tables.get_index<"bystatus"_n>();
     auto iter = game_data.lower_bound(0);
     bool found = true;
-    for(; iter != game_data.end() && iter->status == 1; ++iter){
+    for(; iter != game_data.end() && iter->status == 1; ++iter) {
         if(iter->gamename == gamename) {
             found = false;
             break;
@@ -545,8 +515,7 @@ ACTION nft::addgame(name owner, std::string gamename, std::string introduces)
     });
 }
 
-ACTION nft::editgame(name owner, id_type gameid, std::string gamename, std::string introduces) 
-{
+ACTION nft::editgame(name owner, id_type gameid, std::string gamename, std::string introduces) {
     check(is_account(owner), "issuer account does not exist");
     require_auth(owner);
 
@@ -564,8 +533,7 @@ ACTION nft::editgame(name owner, id_type gameid, std::string gamename, std::stri
     });
 }
 
-ACTION nft::setgame(name owner, id_type gameid, id_type status) 
-{
+ACTION nft::setgame(name owner, id_type gameid, id_type status) {
     check(is_account(owner), "issuer account does not exist");
     require_auth(owner);
 
@@ -581,8 +549,7 @@ ACTION nft::setgame(name owner, id_type gameid, id_type status)
     });
 }
 
-ACTION nft::delgame(name owner, id_type gameid) 
-{
+ACTION nft::delgame(name owner, id_type gameid) {
     check(is_account(owner), "issuer account does not exist");
     require_auth(owner);
     auto admin_one = admin_tables.find(owner.value);
@@ -593,8 +560,7 @@ ACTION nft::delgame(name owner, id_type gameid)
     game_tables.erase(game_find);
 }
 
-ACTION nft::addgameattr(name owner, id_type gameid, std::string key, std::string value) 
-{
+ACTION nft::addgameattr(name owner, id_type gameid, std::string key, std::string value) {
     check(is_account(owner), "issuer account does not exist");
     require_auth(owner);
 
@@ -614,8 +580,7 @@ ACTION nft::addgameattr(name owner, id_type gameid, std::string key, std::string
     });
 }
 
-ACTION nft::editgameattr(name owner, id_type gameid, std::string key, std::string value) 
-{
+ACTION nft::editgameattr(name owner, id_type gameid, std::string key, std::string value) {
     check(is_account(owner), "issuer account does not exist");
     require_auth(owner);
 
@@ -634,8 +599,7 @@ ACTION nft::editgameattr(name owner, id_type gameid, std::string key, std::strin
     }); 
 }
 
-ACTION nft::delgameattr(name owner, id_type gameid, string key) 
-{
+ACTION nft::delgameattr(name owner, id_type gameid, string key) {
     check(is_account(owner), "issuer account does not exist");
     require_auth(owner);
 
@@ -654,8 +618,7 @@ ACTION nft::delgameattr(name owner, id_type gameid, string key)
     }); 
 }
 
-ACTION nft::addmapping(name owner, id_type fromid, id_type targetid, id_type chainid) 
-{
+ACTION nft::addmapping(name owner, id_type fromid, id_type targetid, id_type chainid) {
     check(is_account(owner), "issuer account does not exist");
     require_auth(owner);
 
@@ -686,7 +649,7 @@ ACTION nft::addmapping(name owner, id_type fromid, id_type targetid, id_type cha
     auto it = assetmapping_data.find(fromid);
 
     bool fromfound = true;
-    for(; it != assetmapping_data.end() && it->fromid == fromid; ++it){
+    for(; it != assetmapping_data.end() && it->fromid == fromid; ++it) {
         // print(it->fromid);
         // //print(it->mappingid);
         if(it->chainid == chainid) {
@@ -704,8 +667,7 @@ ACTION nft::addmapping(name owner, id_type fromid, id_type targetid, id_type cha
     });
 }
 
-ACTION nft::delmapping(name owner, id_type fromid, id_type chainid) 
-{
+ACTION nft::delmapping(name owner, id_type fromid, id_type chainid) {
     check(is_account(owner), "issuer account does not exist");
     require_auth(owner);
 
@@ -722,7 +684,7 @@ ACTION nft::delmapping(name owner, id_type fromid, id_type chainid)
     auto iter = assetmapping_data.lower_bound(fromid);
     bool found = false;
     id_type assetmap_id = 0;
-    for( ; iter != assetmapping_data.end() && iter->fromid == fromid; ++iter){
+    for( ; iter != assetmapping_data.end() && iter->fromid == fromid; ++iter) {
         if(iter->chainid == chainid) {
             found = true;
             assetmap_id = iter->mappingid;
@@ -735,8 +697,7 @@ ACTION nft::delmapping(name owner, id_type fromid, id_type chainid)
     assetmap_tables.erase(nftmap_find);
 }
 
-ACTION nft::createorder(name owner, id_type nftid, asset amount, std::string side, std::string memo)
-{
+ACTION nft::createorder(name owner, id_type nftid, asset amount, std::string side, std::string memo) {
     check(is_account(owner), "issuer account does not exist");
     require_auth(owner);
 
@@ -761,7 +722,7 @@ ACTION nft::createorder(name owner, id_type nftid, asset amount, std::string sid
         auto order_data = order_tables.get_index<"bynftid"_n>();
         auto iter = order_data.lower_bound(nftid);
         bool isValid = true;
-        for( ; iter != order_data.end() && iter->nftid == nftid; ++iter){
+        for( ; iter != order_data.end() && iter->nftid == nftid; ++iter) {
             if(iter->side == "sell") {
                 isValid = false;  //one nft one sell
                 break;  
@@ -783,8 +744,7 @@ ACTION nft::createorder(name owner, id_type nftid, asset amount, std::string sid
     });
 }
 
-ACTION nft::cancelorder(name owner, int64_t id)
-{
+ACTION nft::cancelorder(name owner, int64_t id) {
     check(is_account(owner), "issuer account does not exist");
     require_auth(owner);
 
@@ -801,8 +761,7 @@ ACTION nft::cancelorder(name owner, int64_t id)
     //transfer
 }
 
-ACTION nft::trade(name from, name to, id_type id, std::string memo)
-{
+ACTION nft::trade(name from, name to, id_type id, std::string memo) {
     check(is_account(from), "issuer account does not exist");
     require_auth(from);
     require_auth(to);
@@ -825,37 +784,34 @@ ACTION nft::trade(name from, name to, id_type id, std::string memo)
     //contractTransfer(get_self(), to, order_iter->price, memo)
 }
 
-void nft::contractDeposit(name user, asset amount, std::string memo) 
-{
+void nft::contractDeposit(name user, asset amount, std::string memo) {
     check(amount.amount > 0, "amount must be positive");
     check(amount.symbol.code().to_string() == "EOS", "currency must be EOS");
 
     action(
-        permission_level{user, "active"_n},
+        permission_level{ user, "active"_n },
         "eosio.token"_n, "transfer"_n,
         std::make_tuple(user, _self, amount, memo)
     ).send();
 }
 
-void nft::contractTransfer(name from, name to, asset amount, std::string memo)
-{
+void nft::contractTransfer(name from, name to, asset amount, std::string memo) {
     check(amount.amount > 0, "amount must be positive");
     check(amount.symbol.code().to_string() == "EOS", "currency must be EOS");
 
     action(
-        permission_level{from, "active"_n},
+        permission_level{ from, "active"_n },
         "eosio.token"_n, "transfer"_n,
         std::make_tuple(from, to, amount, memo)
     ).send();
 }
 
-void nft::contractWithdraw(name user, asset amount, std::string memo)
-{
+void nft::contractWithdraw(name user, asset amount, std::string memo) {
     check(amount.amount > 0, "amount must be positive");
     check(amount.symbol.code().to_string() == "EOS", "currency must be EOS");
 
     action(
-        permission_level{_self, "active"_n},
+        permission_level{ _self, "active"_n },
         "eosio.token"_n, "transfer"_n,
         std::make_tuple(_self, user, amount, memo)
     ).send();
