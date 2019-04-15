@@ -46,6 +46,9 @@ CONTRACT nft : public eosio::contract
 
         ACTION create(name creator, name owner, std::string explain, std::string worldview);
         ACTION createother(name creator, name owner, std::string explain, std::string worldview, id_type chainid, id_type targetid);
+        ACTION addnftattr(name owner, id_type nftid, std::string key, std::string value);
+        ACTION editnftattr(name owner, id_type nftid, std::string key, std::string value);
+        ACTION delnftattr(name owner, id_type nftid, std::string key);
 
         ACTION addaccauth(name owner, name auth);
         ACTION delaccauth(name owner);
@@ -110,7 +113,7 @@ CONTRACT nft : public eosio::contract
             std::string     explain;
             time_point_sec  createtime;
             std::string     worldview;
-            //std::map<string, string> attr;
+            std::map<std::string, std::string> attr;
             //id_type composeattr;
 
             uint64_t primary_key() const { return id; }

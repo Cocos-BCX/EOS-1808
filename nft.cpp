@@ -143,6 +143,69 @@ ACTION nft::addaccauth(name owner, name auth)
     });
 }
 
+ACTION nft::addnftattr(name owner, id_type nftid, std::string key, std::string value) 
+{
+    check(is_account(owner), "issuer account does not exist");
+    require_auth(owner);
+
+    auto admin_one = admin_tables.find(owner.value);
+    check(admin_one != admin_tables.end(), "admin account is not auth");
+    
+    auto nft_find = nft_tables.find(nftid);
+    check(nft_find != nft_tables.end(), "nft id is not exist");
+
+    std::map<string, string> atrrmap;
+    atrrmap = nft_find->attr;
+    auto iter = atrrmap.find(key);
+    check(iter == atrrmap.end(), "key is exist");
+    atrrmap.insert(std::pair<string, string>(key, value));  
+    nft_tables.modify(nft_find, owner, [&](auto& attr_data) {
+        attr_data.attr = atrrmap;
+    });
+}
+
+ACTION nft::editnftattr(name owner, id_type nftid, std::string key, std::string value) 
+{
+    check(is_account(owner), "issuer account does not exist");
+    require_auth(owner);
+
+    auto admin_one = admin_tables.find(owner.value);
+    check(admin_one != admin_tables.end(), "admin account is not auth");
+    
+    auto nft_find = nft_tables.find(nftid);
+    check(nft_find != nft_tables.end(), "nft id is not exist");
+
+    std::map<string, string> atrrmap;
+    atrrmap = nft_find->attr;
+    auto iter = atrrmap.find(key);
+    check(iter != atrrmap.end(), "key is not exist");
+    atrrmap[key] = value;  
+    nft_tables.modify(nft_find, owner, [&](auto& attr_data) {
+        attr_data.attr = atrrmap;
+    }); 
+}
+
+ACTION nft::delnftattr(name owner, id_type nftid, string key) 
+{
+    check(is_account(owner), "issuer account does not exist");
+    require_auth(owner);
+
+    auto admin_one = admin_tables.find(owner.value);
+    check(admin_one != admin_tables.end(), "admin account is not auth");
+    
+    auto nft_find = nft_tables.find(nftid);
+    check(nft_find != nft_tables.end(), "nft id is not exist");
+
+    std::map<string, string> atrrmap;
+    atrrmap = nft_find->attr;
+    auto iter = atrrmap.find(key);
+    check(iter != atrrmap.end(), "key is not exist");
+    atrrmap.erase(key); 
+    nft_tables.modify(nft_find, owner, [&](auto& attr_data) {
+        attr_data.attr = atrrmap;
+    }); 
+}
+
 ACTION nft::delaccauth(name owner) 
 {
     require_auth(owner);
@@ -798,6 +861,7 @@ void nft::contractWithdraw(name user, asset amount, std::string memo)
     ).send();
 }
 
-EOSIO_DISPATCH(nft, (addadmin)(deladmin)(create)(createother)(addaccauth)(delaccauth)(addnftauth)(delnftauth)
-    (transfer)(addchain)(setchain)(addcompattr)(delcompattr)(setcompose)(delcompose)(addgame)(setgame)(editgame)
-    (delgame)(addgameattr)(editgameattr)(delgameattr)(addmapping)(delmapping)(burn)(createorder)(cancelorder)(trade))
+EOSIO_DISPATCH(nft, (addadmin)(deladmin)(create)(createother)(addnftattr)(editnftattr)(delnftattr)(addaccauth)
+    (delaccauth)(addnftauth)(delnftauth)(transfer)(addchain)(setchain)(addcompattr)(delcompattr)(setcompose)
+    (delcompose)(addgame)(setgame)(editgame)(delgame)(addgameattr)(editgameattr)(delgameattr)(addmapping)
+    (delmapping)(burn)(createorder)(cancelorder)(trade))

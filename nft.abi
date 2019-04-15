@@ -1,0 +1,1052 @@
+{
+    "____comment": "This file was generated with eosio-abigen. DO NOT EDIT ",
+    "version": "eosio::abi/1.1",
+    "types": [
+        {
+            "new_type_name": "id_type",
+            "type": "uint64"
+        }
+    ],
+    "structs": [
+        {
+            "name": "accauth",
+            "base": "",
+            "fields": [
+                {
+                    "name": "owner",
+                    "type": "name"
+                },
+                {
+                    "name": "auth",
+                    "type": "name"
+                }
+            ]
+        },
+        {
+            "name": "addaccauth",
+            "base": "",
+            "fields": [
+                {
+                    "name": "owner",
+                    "type": "name"
+                },
+                {
+                    "name": "auth",
+                    "type": "name"
+                }
+            ]
+        },
+        {
+            "name": "addadmin",
+            "base": "",
+            "fields": [
+                {
+                    "name": "admin",
+                    "type": "name"
+                }
+            ]
+        },
+        {
+            "name": "addchain",
+            "base": "",
+            "fields": [
+                {
+                    "name": "owner",
+                    "type": "name"
+                },
+                {
+                    "name": "chain",
+                    "type": "string"
+                }
+            ]
+        },
+        {
+            "name": "addcompattr",
+            "base": "",
+            "fields": [
+                {
+                    "name": "owner",
+                    "type": "name"
+                },
+                {
+                    "name": "id",
+                    "type": "id_type"
+                }
+            ]
+        },
+        {
+            "name": "addgame",
+            "base": "",
+            "fields": [
+                {
+                    "name": "owner",
+                    "type": "name"
+                },
+                {
+                    "name": "gamename",
+                    "type": "string"
+                },
+                {
+                    "name": "introduces",
+                    "type": "string"
+                }
+            ]
+        },
+        {
+            "name": "addgameattr",
+            "base": "",
+            "fields": [
+                {
+                    "name": "owner",
+                    "type": "name"
+                },
+                {
+                    "name": "gameid",
+                    "type": "id_type"
+                },
+                {
+                    "name": "key",
+                    "type": "string"
+                },
+                {
+                    "name": "value",
+                    "type": "string"
+                }
+            ]
+        },
+        {
+            "name": "addmapping",
+            "base": "",
+            "fields": [
+                {
+                    "name": "owner",
+                    "type": "name"
+                },
+                {
+                    "name": "fromid",
+                    "type": "id_type"
+                },
+                {
+                    "name": "targetid",
+                    "type": "id_type"
+                },
+                {
+                    "name": "chainid",
+                    "type": "id_type"
+                }
+            ]
+        },
+        {
+            "name": "addnftattr",
+            "base": "",
+            "fields": [
+                {
+                    "name": "owner",
+                    "type": "name"
+                },
+                {
+                    "name": "nftid",
+                    "type": "id_type"
+                },
+                {
+                    "name": "key",
+                    "type": "string"
+                },
+                {
+                    "name": "value",
+                    "type": "string"
+                }
+            ]
+        },
+        {
+            "name": "addnftauth",
+            "base": "",
+            "fields": [
+                {
+                    "name": "owner",
+                    "type": "name"
+                },
+                {
+                    "name": "auth",
+                    "type": "name"
+                },
+                {
+                    "name": "id",
+                    "type": "id_type"
+                }
+            ]
+        },
+        {
+            "name": "admins",
+            "base": "",
+            "fields": [
+                {
+                    "name": "admin",
+                    "type": "name"
+                }
+            ]
+        },
+        {
+            "name": "assetmaps",
+            "base": "",
+            "fields": [
+                {
+                    "name": "mappingid",
+                    "type": "id_type"
+                },
+                {
+                    "name": "fromid",
+                    "type": "id_type"
+                },
+                {
+                    "name": "targetid",
+                    "type": "id_type"
+                },
+                {
+                    "name": "chainid",
+                    "type": "id_type"
+                }
+            ]
+        },
+        {
+            "name": "burn",
+            "base": "",
+            "fields": [
+                {
+                    "name": "owner",
+                    "type": "name"
+                },
+                {
+                    "name": "nftid",
+                    "type": "id_type"
+                }
+            ]
+        },
+        {
+            "name": "cancelorder",
+            "base": "",
+            "fields": [
+                {
+                    "name": "owner",
+                    "type": "name"
+                },
+                {
+                    "name": "id",
+                    "type": "int64"
+                }
+            ]
+        },
+        {
+            "name": "composeattr",
+            "base": "",
+            "fields": [
+                {
+                    "name": "nftid",
+                    "type": "id_type"
+                }
+            ]
+        },
+        {
+            "name": "composes",
+            "base": "",
+            "fields": [
+                {
+                    "name": "id",
+                    "type": "id_type"
+                },
+                {
+                    "name": "firid",
+                    "type": "id_type"
+                },
+                {
+                    "name": "secid",
+                    "type": "id_type"
+                },
+                {
+                    "name": "status",
+                    "type": "id_type"
+                }
+            ]
+        },
+        {
+            "name": "create",
+            "base": "",
+            "fields": [
+                {
+                    "name": "creator",
+                    "type": "name"
+                },
+                {
+                    "name": "owner",
+                    "type": "name"
+                },
+                {
+                    "name": "explain",
+                    "type": "string"
+                },
+                {
+                    "name": "worldview",
+                    "type": "string"
+                }
+            ]
+        },
+        {
+            "name": "createorder",
+            "base": "",
+            "fields": [
+                {
+                    "name": "owner",
+                    "type": "name"
+                },
+                {
+                    "name": "nftid",
+                    "type": "id_type"
+                },
+                {
+                    "name": "amount",
+                    "type": "asset"
+                },
+                {
+                    "name": "side",
+                    "type": "string"
+                },
+                {
+                    "name": "memo",
+                    "type": "string"
+                }
+            ]
+        },
+        {
+            "name": "createother",
+            "base": "",
+            "fields": [
+                {
+                    "name": "creator",
+                    "type": "name"
+                },
+                {
+                    "name": "owner",
+                    "type": "name"
+                },
+                {
+                    "name": "explain",
+                    "type": "string"
+                },
+                {
+                    "name": "worldview",
+                    "type": "string"
+                },
+                {
+                    "name": "chainid",
+                    "type": "id_type"
+                },
+                {
+                    "name": "targetid",
+                    "type": "id_type"
+                }
+            ]
+        },
+        {
+            "name": "delaccauth",
+            "base": "",
+            "fields": [
+                {
+                    "name": "owner",
+                    "type": "name"
+                }
+            ]
+        },
+        {
+            "name": "deladmin",
+            "base": "",
+            "fields": [
+                {
+                    "name": "admin",
+                    "type": "name"
+                }
+            ]
+        },
+        {
+            "name": "delcompattr",
+            "base": "",
+            "fields": [
+                {
+                    "name": "owner",
+                    "type": "name"
+                },
+                {
+                    "name": "id",
+                    "type": "id_type"
+                }
+            ]
+        },
+        {
+            "name": "delcompose",
+            "base": "",
+            "fields": [
+                {
+                    "name": "owner",
+                    "type": "name"
+                },
+                {
+                    "name": "firid",
+                    "type": "id_type"
+                },
+                {
+                    "name": "secid",
+                    "type": "id_type"
+                }
+            ]
+        },
+        {
+            "name": "delgame",
+            "base": "",
+            "fields": [
+                {
+                    "name": "owner",
+                    "type": "name"
+                },
+                {
+                    "name": "gameid",
+                    "type": "id_type"
+                }
+            ]
+        },
+        {
+            "name": "delgameattr",
+            "base": "",
+            "fields": [
+                {
+                    "name": "owner",
+                    "type": "name"
+                },
+                {
+                    "name": "gameid",
+                    "type": "id_type"
+                },
+                {
+                    "name": "key",
+                    "type": "string"
+                }
+            ]
+        },
+        {
+            "name": "delmapping",
+            "base": "",
+            "fields": [
+                {
+                    "name": "owner",
+                    "type": "name"
+                },
+                {
+                    "name": "fromid",
+                    "type": "id_type"
+                },
+                {
+                    "name": "chainid",
+                    "type": "id_type"
+                }
+            ]
+        },
+        {
+            "name": "delnftattr",
+            "base": "",
+            "fields": [
+                {
+                    "name": "owner",
+                    "type": "name"
+                },
+                {
+                    "name": "nftid",
+                    "type": "id_type"
+                },
+                {
+                    "name": "key",
+                    "type": "string"
+                }
+            ]
+        },
+        {
+            "name": "delnftauth",
+            "base": "",
+            "fields": [
+                {
+                    "name": "owner",
+                    "type": "name"
+                },
+                {
+                    "name": "id",
+                    "type": "id_type"
+                }
+            ]
+        },
+        {
+            "name": "editgame",
+            "base": "",
+            "fields": [
+                {
+                    "name": "owner",
+                    "type": "name"
+                },
+                {
+                    "name": "gameid",
+                    "type": "id_type"
+                },
+                {
+                    "name": "gamename",
+                    "type": "string"
+                },
+                {
+                    "name": "introduces",
+                    "type": "string"
+                }
+            ]
+        },
+        {
+            "name": "editgameattr",
+            "base": "",
+            "fields": [
+                {
+                    "name": "owner",
+                    "type": "name"
+                },
+                {
+                    "name": "gameid",
+                    "type": "id_type"
+                },
+                {
+                    "name": "key",
+                    "type": "string"
+                },
+                {
+                    "name": "value",
+                    "type": "string"
+                }
+            ]
+        },
+        {
+            "name": "editnftattr",
+            "base": "",
+            "fields": [
+                {
+                    "name": "owner",
+                    "type": "name"
+                },
+                {
+                    "name": "nftid",
+                    "type": "id_type"
+                },
+                {
+                    "name": "key",
+                    "type": "string"
+                },
+                {
+                    "name": "value",
+                    "type": "string"
+                }
+            ]
+        },
+        {
+            "name": "nftchains",
+            "base": "",
+            "fields": [
+                {
+                    "name": "chainid",
+                    "type": "id_type"
+                },
+                {
+                    "name": "chain",
+                    "type": "string"
+                },
+                {
+                    "name": "status",
+                    "type": "id_type"
+                }
+            ]
+        },
+        {
+            "name": "nftgame",
+            "base": "",
+            "fields": [
+                {
+                    "name": "gameid",
+                    "type": "id_type"
+                },
+                {
+                    "name": "gamename",
+                    "type": "string"
+                },
+                {
+                    "name": "introduces",
+                    "type": "string"
+                },
+                {
+                    "name": "status",
+                    "type": "id_type"
+                },
+                {
+                    "name": "index",
+                    "type": "id_type"
+                },
+                {
+                    "name": "createtime",
+                    "type": "time_point_sec"
+                },
+                {
+                    "name": "gameattr",
+                    "type": "pair_string_string[]"
+                }
+            ]
+        },
+        {
+            "name": "nftindexs",
+            "base": "",
+            "fields": [
+                {
+                    "name": "id",
+                    "type": "id_type"
+                },
+                {
+                    "name": "status",
+                    "type": "id_type"
+                }
+            ]
+        },
+        {
+            "name": "nftnumber",
+            "base": "",
+            "fields": [
+                {
+                    "name": "owner",
+                    "type": "name"
+                },
+                {
+                    "name": "number",
+                    "type": "id_type"
+                }
+            ]
+        },
+        {
+            "name": "nftts",
+            "base": "",
+            "fields": [
+                {
+                    "name": "id",
+                    "type": "id_type"
+                },
+                {
+                    "name": "creator",
+                    "type": "name"
+                },
+                {
+                    "name": "owner",
+                    "type": "name"
+                },
+                {
+                    "name": "auth",
+                    "type": "name"
+                },
+                {
+                    "name": "explain",
+                    "type": "string"
+                },
+                {
+                    "name": "createtime",
+                    "type": "time_point_sec"
+                },
+                {
+                    "name": "worldview",
+                    "type": "string"
+                },
+                {
+                    "name": "attr",
+                    "type": "pair_string_string[]"
+                }
+            ]
+        },
+        {
+            "name": "order",
+            "base": "",
+            "fields": [
+                {
+                    "name": "id",
+                    "type": "int64"
+                },
+                {
+                    "name": "nftid",
+                    "type": "id_type"
+                },
+                {
+                    "name": "owner",
+                    "type": "name"
+                },
+                {
+                    "name": "price",
+                    "type": "asset"
+                },
+                {
+                    "name": "side",
+                    "type": "string"
+                },
+                {
+                    "name": "memo",
+                    "type": "string"
+                },
+                {
+                    "name": "createtime",
+                    "type": "time_point_sec"
+                }
+            ]
+        },
+        {
+            "name": "pair_string_string",
+            "base": "",
+            "fields": [
+                {
+                    "name": "key",
+                    "type": "string"
+                },
+                {
+                    "name": "value",
+                    "type": "string"
+                }
+            ]
+        },
+        {
+            "name": "setchain",
+            "base": "",
+            "fields": [
+                {
+                    "name": "owner",
+                    "type": "name"
+                },
+                {
+                    "name": "chainid",
+                    "type": "id_type"
+                },
+                {
+                    "name": "status",
+                    "type": "id_type"
+                }
+            ]
+        },
+        {
+            "name": "setcompose",
+            "base": "",
+            "fields": [
+                {
+                    "name": "owner",
+                    "type": "name"
+                },
+                {
+                    "name": "firid",
+                    "type": "id_type"
+                },
+                {
+                    "name": "secid",
+                    "type": "id_type"
+                }
+            ]
+        },
+        {
+            "name": "setgame",
+            "base": "",
+            "fields": [
+                {
+                    "name": "owner",
+                    "type": "name"
+                },
+                {
+                    "name": "gameid",
+                    "type": "id_type"
+                },
+                {
+                    "name": "status",
+                    "type": "id_type"
+                }
+            ]
+        },
+        {
+            "name": "trade",
+            "base": "",
+            "fields": [
+                {
+                    "name": "from",
+                    "type": "name"
+                },
+                {
+                    "name": "to",
+                    "type": "name"
+                },
+                {
+                    "name": "id",
+                    "type": "id_type"
+                },
+                {
+                    "name": "memo",
+                    "type": "string"
+                }
+            ]
+        },
+        {
+            "name": "transfer",
+            "base": "",
+            "fields": [
+                {
+                    "name": "from",
+                    "type": "name"
+                },
+                {
+                    "name": "to",
+                    "type": "name"
+                },
+                {
+                    "name": "id",
+                    "type": "id_type"
+                },
+                {
+                    "name": "memo",
+                    "type": "string"
+                }
+            ]
+        }
+    ],
+    "actions": [
+        {
+            "name": "addaccauth",
+            "type": "addaccauth",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "addadmin",
+            "type": "addadmin",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "addchain",
+            "type": "addchain",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "addcompattr",
+            "type": "addcompattr",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "addgame",
+            "type": "addgame",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "addgameattr",
+            "type": "addgameattr",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "addmapping",
+            "type": "addmapping",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "addnftattr",
+            "type": "addnftattr",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "addnftauth",
+            "type": "addnftauth",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "burn",
+            "type": "burn",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "cancelorder",
+            "type": "cancelorder",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "create",
+            "type": "create",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "createorder",
+            "type": "createorder",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "createother",
+            "type": "createother",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "delaccauth",
+            "type": "delaccauth",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "deladmin",
+            "type": "deladmin",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "delcompattr",
+            "type": "delcompattr",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "delcompose",
+            "type": "delcompose",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "delgame",
+            "type": "delgame",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "delgameattr",
+            "type": "delgameattr",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "delmapping",
+            "type": "delmapping",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "delnftattr",
+            "type": "delnftattr",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "delnftauth",
+            "type": "delnftauth",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "editgame",
+            "type": "editgame",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "editgameattr",
+            "type": "editgameattr",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "editnftattr",
+            "type": "editnftattr",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "setchain",
+            "type": "setchain",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "setcompose",
+            "type": "setcompose",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "setgame",
+            "type": "setgame",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "trade",
+            "type": "trade",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "transfer",
+            "type": "transfer",
+            "ricardian_contract": ""
+        }
+    ],
+    "tables": [
+        {
+            "name": "accauth",
+            "type": "accauth",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        },
+        {
+            "name": "admins",
+            "type": "admins",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        },
+        {
+            "name": "assetmaps",
+            "type": "assetmaps",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        },
+        {
+            "name": "composeattr",
+            "type": "composeattr",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        },
+        {
+            "name": "composes",
+            "type": "composes",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        },
+        {
+            "name": "nftchains",
+            "type": "nftchains",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        },
+        {
+            "name": "nftgame",
+            "type": "nftgame",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        },
+        {
+            "name": "nftindexs",
+            "type": "nftindexs",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        },
+        {
+            "name": "nftnumber",
+            "type": "nftnumber",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        },
+        {
+            "name": "nftts",
+            "type": "nftts",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        },
+        {
+            "name": "orders",
+            "type": "order",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        }
+    ],
+    "ricardian_clauses": [],
+    "variants": []
+}
