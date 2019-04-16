@@ -28,7 +28,7 @@ ACTION nft::create(name creator, name owner, std::string explain, std::string wo
     check(is_account(creator), "creator account does not exist");
     check(is_account(owner), "owner account does not exist");
     check(explain.size() <= 256, "explain has more than 256 bytes");
-    check(worldview.size() <= 20, "worldview has more than 20 bytes");
+    check(worldview.size() <= 20 && worldview.size() > 0, "worldview has more than 20 bytes or is empty");
     require_auth(creator);
 
     auto admin_one = admin_tables.find(creator.value);
@@ -70,7 +70,7 @@ ACTION nft::createother(name creator, name owner, std::string explain, std::stri
     check(is_account(creator), "creator account does not exist");
     check(is_account(owner), "owner account does not exist");
     check(explain.size() <= 256, "explain has more than 64 bytes");
-    check(worldview.size() <= 20, "worldview has more than 20 bytes");
+    check(worldview.size() <= 20 && worldview.size() > 0, "worldview has more than 20 bytes or is empty");
     require_auth(creator);
     
     auto admin_one = admin_tables.find(creator.value);
@@ -731,6 +731,13 @@ ACTION nft::createorder(name owner, id_type nftid, asset amount, std::string sid
         check(isValid, "nft sell order is not valid");
     } else {
         check(asset_iter->owner != owner, "Can't buy your own nft asset");
+
+        //transfer eos from owner to _self
+        action(
+            permission_level{ owner, "active"_n },
+            "eosio.token"_n, "transfer"_n,
+            std::make_tuple(owner, _self, amount, memo)
+        ).send();
     }
 
     order_tables.emplace(owner, [&](auto& order) {
@@ -758,7 +765,16 @@ ACTION nft::cancelorder(name owner, int64_t id) {
 
     order_tables.erase(iter);
 
-    //transfer
+    //transfer token
+    auto price = iter->price;
+    int64_t fee_amount = 1;  //0.001 EOS
+    if (price.amount > 1) {
+        price.amount = price.amount - fee_amount;
+        action(permission_level{ _self, "active"_n },
+            "eosio.token"_n, "transfer"_n,
+            std::make_tuple(_self, owner, price, std::string("cancel order")))
+        .send();
+    }
 }
 
 ACTION nft::trade(name from, name to, id_type id, std::string memo) {
@@ -779,42 +795,19 @@ ACTION nft::trade(name from, name to, id_type id, std::string memo) {
     check(status_iter != index_tables.end(), "nft index does not exist");
     check(status_iter->status == 1, "nft status is close");
 
+    //transfer nft to buyer
     transfer(from, to, id, memo);
     
-    //contractTransfer(get_self(), to, order_iter->price, memo)
-}
-
-void nft::contractDeposit(name user, asset amount, std::string memo) {
-    check(amount.amount > 0, "amount must be positive");
-    check(amount.symbol.code().to_string() == "EOS", "currency must be EOS");
-
-    action(
-        permission_level{ user, "active"_n },
-        "eosio.token"_n, "transfer"_n,
-        std::make_tuple(user, _self, amount, memo)
-    ).send();
-}
-
-void nft::contractTransfer(name from, name to, asset amount, std::string memo) {
-    check(amount.amount > 0, "amount must be positive");
-    check(amount.symbol.code().to_string() == "EOS", "currency must be EOS");
-
-    action(
-        permission_level{ from, "active"_n },
-        "eosio.token"_n, "transfer"_n,
-        std::make_tuple(from, to, amount, memo)
-    ).send();
-}
-
-void nft::contractWithdraw(name user, asset amount, std::string memo) {
-    check(amount.amount > 0, "amount must be positive");
-    check(amount.symbol.code().to_string() == "EOS", "currency must be EOS");
-
-    action(
-        permission_level{ _self, "active"_n },
-        "eosio.token"_n, "transfer"_n,
-        std::make_tuple(_self, user, amount, memo)
-    ).send();
+    //transfer token to seller
+    auto price = order_iter->price;
+    int64_t fee_amount = 1;  //fee 0.0001 EOS
+    if (price.amount > 1) {
+        price.amount = price.amount - fee_amount;
+        action(permission_level{ _self, "active"_n },
+            "eosio.token"_n, "transfer"_n,
+            std::make_tuple(_self, from, price, memo))
+        .send();
+    }
 }
 
 EOSIO_DISPATCH(nft, (addadmin)(deladmin)(create)(createother)(addnftattr)(editnftattr)(delnftattr)(addaccauth)

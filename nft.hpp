@@ -222,11 +222,6 @@ CONTRACT nft : public eosio::contract {
             indexed_by<"bynftid"_n, const_mem_fun<order, uint64_t, &order::get_nftid> > >;
 
     private:
-        void contractDeposit(name user, asset quantity, std::string memo);
-        void contractTransfer(name from, name to, asset quantity, std::string memo);
-        void contractWithdraw(name user, asset quantity, std::string memo);
-
-    private:
         admins_index        admin_tables;
         nftnumber_index     nftnumber_tables;
         nftindex_index      index_tables;
