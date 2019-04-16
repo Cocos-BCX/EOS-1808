@@ -795,6 +795,28 @@ ACTION nft::trade(name from, name to, id_type id, std::string memo) {
     check(status_iter != index_tables.end(), "nft index does not exist");
     check(status_iter->status == 1, "nft status is close");
 
+    //from account nft number -1
+    auto from_nftnum = nftnumber_tables.find(from.value);
+    check(from_nftnum != nftnumber_tables.end(), "from account nft number does not exist");
+    if(from_nftnum->number != 1) {
+        nftnumber_tables.modify(from_nftnum, from, [&](auto& nftnum_data) {
+            nftnum_data.number = from_nftnum->number-1;
+        });
+    } else {
+        nftnumber_tables.erase(from_nftnum);
+    }
+
+    //to account nft number +1
+    auto to_nftnum = nftnumber_tables.find(to.value);
+    check(to_nftnum != nftnumber_tables.end(), "to account nft number does not exist");
+    if(to_nftnum->number != 1) {
+        nftnumber_tables.modify(to_nftnum, to, [&](auto& nftnum_data) {
+            nftnum_data.number = to_nftnum->number+1;
+        });
+    } else {
+        nftnumber_tables.erase(to_nftnum);
+    }
+
     //transfer nft to buyer
     transfer(from, to, id, memo);
     
