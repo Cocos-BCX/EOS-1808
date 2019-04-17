@@ -138,11 +138,16 @@ ACTION nft::addnftattr(name owner, id_type nftid, std::string key, std::string v
     check(is_account(owner), "issuer account does not exist");
     require_auth(owner);
 
-    auto admin_one = admin_tables.find(owner.value);
-    check(admin_one != admin_tables.end(), "admin account is not auth");
+    // auto admin_one = admin_tables.find(owner.value);
+    // check(admin_one != admin_tables.end(), "admin account is not auth");
     
     auto nft_find = nft_tables.find(nftid);
     check(nft_find != nft_tables.end(), "nft id is not exist");
+
+    //nft status check
+    auto status_iter = index_tables.find(nftid);
+    check(status_iter != index_tables.end(), "nft index does not exist");
+    check(status_iter->status == 1, "nft status is close, does not add nft attr");
 
     std::map<string, string> atrrmap;
     atrrmap = nft_find->attr;
@@ -158,11 +163,16 @@ ACTION nft::editnftattr(name owner, id_type nftid, std::string key, std::string 
     check(is_account(owner), "issuer account does not exist");
     require_auth(owner);
 
-    auto admin_one = admin_tables.find(owner.value);
-    check(admin_one != admin_tables.end(), "admin account is not auth");
+    // auto admin_one = admin_tables.find(owner.value);
+    // check(admin_one != admin_tables.end(), "admin account is not auth");
     
     auto nft_find = nft_tables.find(nftid);
     check(nft_find != nft_tables.end(), "nft id is not exist");
+
+    //nft status check
+    auto status_iter = index_tables.find(nftid);
+    check(status_iter != index_tables.end(), "nft index does not exist");
+    check(status_iter->status == 1, "nft status is close, does not edit nft attr");
 
     std::map<string, string> atrrmap;
     atrrmap = nft_find->attr;
@@ -178,11 +188,16 @@ ACTION nft::delnftattr(name owner, id_type nftid, string key) {
     check(is_account(owner), "issuer account does not exist");
     require_auth(owner);
 
-    auto admin_one = admin_tables.find(owner.value);
-    check(admin_one != admin_tables.end(), "admin account is not auth");
+    // auto admin_one = admin_tables.find(owner.value);
+    // check(admin_one != admin_tables.end(), "admin account is not auth");
     
     auto nft_find = nft_tables.find(nftid);
     check(nft_find != nft_tables.end(), "nft id is not exist");
+
+    //nft status check
+    auto status_iter = index_tables.find(nftid);
+    check(status_iter != index_tables.end(), "nft index does not exist");
+    check(status_iter->status == 1, "nft status is close, does not delete nft attr");
 
     std::map<string, string> atrrmap;
     atrrmap = nft_find->attr;
