@@ -1,3 +1,4 @@
+#include <algorithm>
 #include "nft.hpp"
 
 using namespace eosio;
@@ -256,7 +257,7 @@ ACTION nft::delnftauth(name owner, id_type id) {
     });
 }
 
-ACTION nft::transfer(name from, name to, id_type id, std::string memo) {
+ACTION nft::transfernft(name from, name to, id_type id, std::string memo) {
     require_auth(from);
     check(is_account(from), "from auth does not exist");
     check(is_account(to), "to auth does not exist");
@@ -665,8 +666,6 @@ ACTION nft::addmapping(name owner, id_type fromid, id_type targetid, id_type cha
 
     bool fromfound = true;
     for(; it != assetmapping_data.end() && it->fromid == fromid; ++it) {
-        // print(it->fromid);
-        // //print(it->mappingid);
         if(it->chainid == chainid) {
             fromfound = false;
             break;
@@ -712,7 +711,13 @@ ACTION nft::delmapping(name owner, id_type fromid, id_type chainid) {
     assetmap_tables.erase(nftmap_find);
 }
 
-ACTION nft::createorder(name owner, id_type nftid, asset amount, std::string side, std::string memo) {
+ACTION nft::orderclean(id_type orderid) {
+    auto iter = order_tables.find(orderid);
+    check(iter != order_tables.end(), std::to_string(orderid) + ", orderclean failed, order is not exist");
+    order_tables.erase(iter);
+}
+
+void nft::createorder(name owner, id_type nftid, asset amount, std::string side, std::string memo) {
     check(is_account(owner), "issuer account does not exist");
     require_auth(owner);
 
@@ -734,28 +739,21 @@ ACTION nft::createorder(name owner, id_type nftid, asset amount, std::string sid
 
     if (side == "sell") {
         check(asset_iter->owner == owner, "can't sell other nft asset");
-        auto order_data = order_tables.get_index<"bynftid"_n>();
-        auto iter = order_data.lower_bound(nftid);
+        auto order_data = order_tables.get_index<"byowner"_n>();
+        auto iter = order_data.lower_bound(owner.value);
         bool isValid = true;
         for( ; iter != order_data.end() && iter->nftid == nftid; ++iter) {
             if(iter->side == "sell") {
                 isValid = false;  //one nft one sell
-                break;  
+                break;
             }
         }
         check(isValid, "nft sell order is not valid");
     } else {
         check(asset_iter->owner != owner, "Can't buy your own nft asset");
-
-        //transfer eos from owner to _self
-        action(
-            permission_level{ owner, "active"_n },
-            "eosio.token"_n, "transfer"_n,
-            std::make_tuple(owner, _self, amount, memo)
-        ).send();
     }
 
-    order_tables.emplace(owner, [&](auto& order) {
+    order_tables.emplace(_self, [&](auto& order) {
         order.id = order_tables.available_primary_key();
         order.nftid = nftid;
         order.owner = owner;
@@ -766,12 +764,11 @@ ACTION nft::createorder(name owner, id_type nftid, asset amount, std::string sid
     });
 }
 
-ACTION nft::cancelorder(name owner, int64_t id) {
+void nft::cancelorder(name owner, id_type id, std::string memo) {
     check(is_account(owner), "issuer account does not exist");
-    require_auth(owner);
 
     auto iter = order_tables.find(id);
-    check(iter != order_tables.end(), "order is not exist");
+    check(iter != order_tables.end(), std::to_string(id) + ", cancel failed, order is not exist, " + memo);
     check(iter->owner == owner, "owner is not equal");
 
     auto status_iter = index_tables.find(iter->nftid);
@@ -781,73 +778,208 @@ ACTION nft::cancelorder(name owner, int64_t id) {
     order_tables.erase(iter);
 
     //transfer token
-    auto price = iter->price;
-    int64_t fee_amount = 1;  //0.001 EOS
-    if (price.amount > 1) {
-        price.amount = price.amount - fee_amount;
+    if(iter->side == "buy") {
         action(permission_level{ _self, "active"_n },
             "eosio.token"_n, "transfer"_n,
-            std::make_tuple(_self, owner, price, std::string("cancel order")))
+            std::make_tuple(_self, owner, iter->price, std::string("cancel order")))
         .send();
     }
 }
 
-ACTION nft::trade(name from, name to, id_type id, std::string memo) {
-    check(is_account(from), "issuer account does not exist");
-    require_auth(from);
-    require_auth(to);
-    check(memo.size() <= 256, "memo has more than 256 bytes");
+void nft::trade(const name& from, const name& to, id_type orderid, const std::string& side, const std::string& memo) {
+    check(is_account(from), "from account does not exist");
+    check(is_account(to), "to account does not exist");
+    check(side == "buy" || side == "sell", "side must be buy or sell");
 
-    auto order_iter = order_tables.find(id);
-    check(order_iter != order_tables.end(), "order is not exist");
-    order_tables.erase(order_iter);
+    auto iter = order_tables.find(orderid);
+    check(iter != order_tables.end(), std::to_string(orderid) + ", trade failed, order is not exist");
+    order_tables.erase(iter);
 
-    auto nft_iter = nft_tables.find(id);
-    check(nft_iter != nft_tables.end(), "nft asset is not exist");
-    check(nft_iter->owner == from, "owner is not equal");
-
-    auto status_iter = index_tables.find(id);
+    auto status_iter = index_tables.find(iter->nftid);
     check(status_iter != index_tables.end(), "nft index does not exist");
     check(status_iter->status == 1, "nft status is close");
 
-    //from account nft number -1
-    auto from_nftnum = nftnumber_tables.find(from.value);
-    check(from_nftnum != nftnumber_tables.end(), "from account nft number does not exist");
-    if(from_nftnum->number != 1) {
-        nftnumber_tables.modify(from_nftnum, from, [&](auto& nftnum_data) {
-            nftnum_data.number = from_nftnum->number-1;
+    auto nft_iter = nft_tables.find(iter->nftid);
+    check(nft_iter != nft_tables.end(), "nft asset is not exist");
+    if (iter->side == "buy" && side == "sell") {
+        check(nft_iter->owner == to, "buy order, owner is not equal to account");
+    } else if (iter->side == "sell" && side == "buy") {
+        check(nft_iter->owner == iter->owner, "sell order, owner is not equal from account");
+    } else {
+        check(false, "invalid side");
+    }
+    nft_tables.modify(nft_iter, _self, [&](auto& nft_data) {
+        nft_data.auth = to;
+        nft_data.owner = to;
+     });
+
+    //from nft number -1
+    auto nftnum = nftnumber_tables.find(from.value);
+    if(nftnum->number != 1) {
+        nftnumber_tables.modify(nftnum, _self, [&](auto& nftnum_data) {
+            nftnum_data.number = nftnum->number - 1;
         });
     } else {
-        nftnumber_tables.erase(from_nftnum);
+        nftnumber_tables.erase(nftnum);
     }
 
-    //to account nft number +1
-    auto to_nftnum = nftnumber_tables.find(to.value);
-    check(to_nftnum != nftnumber_tables.end(), "to account nft number does not exist");
-    if(to_nftnum->number != 1) {
-        nftnumber_tables.modify(to_nftnum, to, [&](auto& nftnum_data) {
-            nftnum_data.number = to_nftnum->number+1;
+    //to nft number +1
+    auto nfttonum = nftnumber_tables.find(to.value);
+    if(nfttonum != nftnumber_tables.end()) {
+        nftnumber_tables.modify(nfttonum, _self, [&](auto& nftnum_data) {
+            nftnum_data.number = nfttonum->number + 1;
         });
     } else {
-        nftnumber_tables.erase(to_nftnum);
+        nftnumber_tables.emplace(to, [&](auto& nftnum_data) {
+            nftnum_data.owner = to;
+            nftnum_data.number = 1;
+        });   
     }
 
-    //transfer nft to buyer
-    transfer(from, to, id, memo);
-    
-    //transfer token to seller
-    auto price = order_iter->price;
-    int64_t fee_amount = 1;  //fee 0.0001 EOS
-    if (price.amount > 1) {
-        price.amount = price.amount - fee_amount;
+    auto amount = iter->price;
+    amount.amount = amount.amount - FEE;
+    if (amount.amount > 0) {
         action(permission_level{ _self, "active"_n },
             "eosio.token"_n, "transfer"_n,
-            std::make_tuple(_self, from, price, memo))
+            std::make_tuple(_self, from, amount, memo))
         .send();
     }
+}
+
+void nft::parse_memo(std::string memo, std::string& action, std::map<std::string, std::string>& params) {
+    // remove space
+    memo.erase(std::remove_if(memo.begin(), memo.end(), [](unsigned char x) { 
+            return std::isspace(x); }), memo.end());
+
+    size_t pos;
+    std::string container;
+    pos = sub2sep(memo, container, '-', 0, true);
+    check(!container.empty(), "no action");
+    action = container;
+    if (container == "order") {
+        pos = sub2sep(memo, container, '-', ++pos, true);
+        check(!container.empty(), "no owner");
+        params["owner"] = container;
+
+        pos = sub2sep(memo, container, '-', ++pos, true);
+        check(!container.empty(), "no nft id");
+        params["nftid"] = container;
+
+        pos = sub2sep(memo, container, '-', ++pos, true);
+        check(!container.empty(), "no price");
+        params["price"] = container;
+
+        pos = sub2sep(memo, container, '-', ++pos, true);
+        check(!container.empty(), "no side");
+        check(container == "buy" || container == "sell", "side must be buy or sell");
+        params["side"] = container;
+    } else if (container == "trade") {
+        pos = sub2sep(memo, container, '-', ++pos, true);
+        check(!container.empty(), "no from account");
+        params["from"] = container;
+
+        pos = sub2sep(memo, container, '-', ++pos, true);
+        check(!container.empty(), "no to account");
+        params["to"] = container;
+
+        pos = sub2sep(memo, container, '-', ++pos, true);
+        check(!container.empty(), "no order id");
+        params["id"] = container;
+
+        pos = sub2sep(memo, container, '-', ++pos, true);
+        check(!container.empty(), "no side");
+        check(container == "buy" || container == "sell", "side must be buy or sell");
+        params["side"] = container;
+    } else if (container == "cancel") {
+        pos = sub2sep(memo, container, '-', ++pos, true);
+        check(!container.empty(), "no from account");
+        params["owner"] = container;
+
+        pos = sub2sep(memo, container, '-', ++pos, true);
+        check(!container.empty(), "no order id");
+        params["id"] = container;
+    }
+}
+
+void nft::transfer(const name& from, const name& to, const asset& quantity, const std::string& memo) {
+    check(is_account(from), "from account does not exist");
+    check(is_account(to), "to account does not exist");
+    check(quantity.symbol.is_valid(), "invalid symbol name");
+    //check(quantity.symbol.code() == "EOS", "transfer must be EOS");
+    check(quantity.amount >= FEE, "transfer fee too small");
+    check(memo.size() <= 256 && !memo.empty(), "memo has more than 256 bytes or is empty");
+    if (from == _self || to != _self) {
+        return;
+    }
+
+    std::map<std::string, std::string> params;
+    std::string action;
+    parse_memo(memo, action, params);
+    check(action == "order" || action == "trade" || action == "cancel", "memo action error");
+    check(params.size() > 0, "memo error");
+
+    if(action == "order") {
+        check(params.find("owner") != params.end() && params.find("nftid") != params.end()
+            && params.find("price") != params.end() && params.find("side") != params.end(), 
+            "create order param error");
+        std::string owner = params["owner"];
+        std::string id = params["nftid"];
+        uint64_t nftid = stoi(id);
+        std::string price = params["price"];
+        uint64_t nPrice = stoi(price);
+        std::string side = params["side"];
+        auto amount = quantity;
+        if (side == "buy") {
+            check(amount.amount == nPrice, "buy nft, transfer quantity not equal price");
+        } else {
+            amount.amount = nPrice;
+        }
+        createorder(name(owner), nftid, amount, side, memo);
+    } else if(action == "trade") {
+        check(params.find("from") != params.end() && params.find("to") != params.end()
+            && params.find("id") != params.end() && params.find("side") != params.end(),
+            "trade param error");
+        std::string id = params["id"];
+        uint64_t order_id = stoi(id);
+        if(params["side"] == "buy") {
+            check(from.to_string() == params["to"], "transfer from not equal memo to account");
+        } else {
+            check(from .to_string() == params["from"], "transfer from not equal memo from account");
+        }
+        trade(name(params["from"]), name(params["to"]), order_id, params["side"], memo);
+    } else if(action == "cancel") {
+        check(params.find("owner") != params.end() && params.find("id") != params.end(), 
+            "cancel order param error");
+        check(quantity.amount >= FEE, "cancel order, fee not enough");
+        check(from.to_string() == params["owner"], "transfer from not equal memo owner");
+        std::string id = params["id"];
+        uint64_t order_id = stoi(id);
+        cancelorder(name(params["owner"]), order_id, memo);
+    }
+}
+
+#ifdef EOSIO_DISPATCH
+#undef EOSIO_DISPATCH
+#endif
+#define EOSIO_DISPATCH( TYPE, MEMBERS )                                         \
+extern "C" {                                                                    \
+    void apply(uint64_t receiver, uint64_t code, uint64_t action) {             \
+        if ( code == receiver ) {                                               \
+            switch( action ) {                                                  \
+                EOSIO_DISPATCH_HELPER( TYPE, MEMBERS )                          \
+            }                                                                   \
+        }                                                                       \
+        if (code == N(eosio.token).value && action == N(transfer).value) {      \
+            execute_action(name(receiver), name(receiver), &nft::transfer);     \
+            return;                                                             \
+        }                                                                       \
+        if (action == N(transfer).value) {                                      \
+            check(false, "only support EOS token");                             \
+        }                                                                       \
+    }                                                                           \
 }
 
 EOSIO_DISPATCH(nft, (addadmin)(deladmin)(create)(createother)(addnftattr)(editnftattr)(delnftattr)(addaccauth)
     (delaccauth)(addnftauth)(delnftauth)(transfer)(addchain)(setchain)(addcompattr)(delcompattr)(setcompose)
     (delcompose)(addgame)(setgame)(editgame)(delgame)(addgameattr)(editgameattr)(delgameattr)(addmapping)
-    (delmapping)(burn)(createorder)(cancelorder)(trade))
+    (delmapping)(burn)(orderclean))

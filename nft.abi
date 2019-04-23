@@ -223,20 +223,6 @@
             ]
         },
         {
-            "name": "cancelorder",
-            "base": "",
-            "fields": [
-                {
-                    "name": "owner",
-                    "type": "name"
-                },
-                {
-                    "name": "id",
-                    "type": "int64"
-                }
-            ]
-        },
-        {
             "name": "composeattr",
             "base": "",
             "fields": [
@@ -286,32 +272,6 @@
                 },
                 {
                     "name": "worldview",
-                    "type": "string"
-                }
-            ]
-        },
-        {
-            "name": "createorder",
-            "base": "",
-            "fields": [
-                {
-                    "name": "owner",
-                    "type": "name"
-                },
-                {
-                    "name": "nftid",
-                    "type": "id_type"
-                },
-                {
-                    "name": "amount",
-                    "type": "asset"
-                },
-                {
-                    "name": "side",
-                    "type": "string"
-                },
-                {
-                    "name": "memo",
                     "type": "string"
                 }
             ]
@@ -670,15 +630,15 @@
             "fields": [
                 {
                     "name": "id",
-                    "type": "int64"
-                },
-                {
-                    "name": "nftid",
                     "type": "id_type"
                 },
                 {
                     "name": "owner",
                     "type": "name"
+                },
+                {
+                    "name": "nftid",
+                    "type": "id_type"
                 },
                 {
                     "name": "price",
@@ -695,6 +655,16 @@
                 {
                     "name": "createtime",
                     "type": "time_point_sec"
+                }
+            ]
+        },
+        {
+            "name": "orderclean",
+            "base": "",
+            "fields": [
+                {
+                    "name": "orderid",
+                    "type": "id_type"
                 }
             ]
         },
@@ -767,29 +737,7 @@
             ]
         },
         {
-            "name": "trade",
-            "base": "",
-            "fields": [
-                {
-                    "name": "from",
-                    "type": "name"
-                },
-                {
-                    "name": "to",
-                    "type": "name"
-                },
-                {
-                    "name": "id",
-                    "type": "id_type"
-                },
-                {
-                    "name": "memo",
-                    "type": "string"
-                }
-            ]
-        },
-        {
-            "name": "transfer",
+            "name": "transfernft",
             "base": "",
             "fields": [
                 {
@@ -863,18 +811,8 @@
             "ricardian_contract": ""
         },
         {
-            "name": "cancelorder",
-            "type": "cancelorder",
-            "ricardian_contract": ""
-        },
-        {
             "name": "create",
             "type": "create",
-            "ricardian_contract": ""
-        },
-        {
-            "name": "createorder",
-            "type": "createorder",
             "ricardian_contract": ""
         },
         {
@@ -943,6 +881,11 @@
             "ricardian_contract": ""
         },
         {
+            "name": "orderclean",
+            "type": "orderclean",
+            "ricardian_contract": ""
+        },
+        {
             "name": "setchain",
             "type": "setchain",
             "ricardian_contract": ""
@@ -958,13 +901,8 @@
             "ricardian_contract": ""
         },
         {
-            "name": "trade",
-            "type": "trade",
-            "ricardian_contract": ""
-        },
-        {
-            "name": "transfer",
-            "type": "transfer",
+            "name": "transfernft",
+            "type": "transfernft",
             "ricardian_contract": ""
         }
     ],
@@ -1040,7 +978,7 @@
             "key_types": []
         },
         {
-            "name": "orders",
+            "name": "orders3",
             "type": "order",
             "index_type": "i64",
             "key_names": [],

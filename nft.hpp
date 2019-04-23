@@ -7,14 +7,36 @@
 
 #include <string>
 #include <vector>
+#include <map>
+#include <utility>
 
 using namespace eosio;
 using std::string;
 using std::vector;
+using std::map;
+
+#define N(X)        eosio::name{#X}
+#define S(P,X)      eosio::symbol(#X,P)
+#define EOS_SYMBOL  S(4, EOS)
 
 typedef uint128_t uuid;
 typedef uint64_t id_type;
 typedef string uri_type;
+
+int64_t FEE = 1;  //0.0001 EOS
+
+size_t sub2sep( const std::string& input, std::string& output, const char& separator,
+    const size_t& first_pos = 0, const bool& required = false ) {
+
+    check(first_pos != std::string::npos, "invalid first pos");
+    auto pos = input.find(separator, first_pos);
+    if (pos == std::string::npos) {
+        check(!required, "parse memo error");
+        return std::string::npos;
+    }
+    output = input.substr(first_pos, pos - first_pos);
+    return pos;
+}
 
 CONTRACT nft : public eosio::contract {
     public:
@@ -48,7 +70,7 @@ CONTRACT nft : public eosio::contract {
         ACTION delaccauth(name owner);
         ACTION addnftauth(name owner, name auth, id_type id);
         ACTION delnftauth(name owner, id_type id);
-        ACTION transfer(name from, name to, id_type id, std::string memo);
+        ACTION transfernft(name from, name to, id_type id, std::string memo);
         ACTION burn(name owner, id_type nftid);
 
         ACTION addchain(name owner, std::string chain);
@@ -70,9 +92,9 @@ CONTRACT nft : public eosio::contract {
         ACTION editgameattr(name owner, id_type gameid, std::string key, std::string value);
         ACTION delgameattr(name owner, id_type gameid, std::string key);
 
-        ACTION createorder(name owner, id_type nftid, asset amount, std::string side, std::string memo);
-        ACTION cancelorder(name owner, int64_t id);
-        ACTION trade(name from, name to, id_type id, std::string memo);
+        ACTION orderclean(id_type orderid);
+
+        void transfer(const name& from, const name& to, const asset& quantity, const std::string& memo);
 
         TABLE admins {
             name            admin;
@@ -173,16 +195,16 @@ CONTRACT nft : public eosio::contract {
         };
 
        TABLE order {
-            int64_t         id;
-            id_type         nftid;
+            id_type         id;
             name            owner;
+            id_type         nftid;
             asset           price;
             std::string     side;
             std::string     memo;
             time_point_sec  createtime;
 
             uint64_t primary_key() const { return id; }
-            uint64_t get_nftid() const { return nftid; }
+            uint64_t get_owner() const { return owner.value; }
         };
 
         using admins_index = eosio::multi_index<"admins"_n, admins>;
@@ -218,8 +240,8 @@ CONTRACT nft : public eosio::contract {
             indexed_by< "bytargetid"_n, const_mem_fun< assetmaps, uint64_t, &assetmaps::get_targetid> >,
             indexed_by< "bychainid"_n, const_mem_fun< assetmaps, uint64_t, &assetmaps::get_chainid> > >;
 
-        using order_index = eosio::multi_index<"orders"_n, order,
-            indexed_by<"bynftid"_n, const_mem_fun<order, uint64_t, &order::get_nftid> > >;
+        using order_index = eosio::multi_index<"orders3"_n, order,
+            indexed_by< "byowner"_n, const_mem_fun< order, uint64_t, &order::get_owner> > >;
 
     private:
         admins_index        admin_tables;
@@ -233,5 +255,12 @@ CONTRACT nft : public eosio::contract {
         nftgame_index       game_tables;
         assetmaps_index     assetmap_tables;
         order_index         order_tables;
+
+    private:
+        void createorder(name owner, id_type nftid, asset amount, std::string side, std::string memo);
+        void cancelorder(name owner, id_type id, std::string memo);
+        void trade(const name& from, const name& to, id_type orderid, const std::string& side, const std::string& memo);
+
+        void parse_memo(std::string memo, std::string& action, std::map<std::string, std::string>& params);
 };
 
