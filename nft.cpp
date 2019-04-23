@@ -36,14 +36,14 @@ ACTION nft::create(name creator, name owner, std::string explain, std::string wo
     check(admin_one != admin_tables.end(), "admin account is not auth");
 
     id_type index_id = index_tables.available_primary_key();
-    index_tables.emplace(creator, [&](auto& index_data) {
+    index_tables.emplace(_self, [&](auto& index_data) {
         index_data.id = index_id;
         index_data.status = 1;
     });
 
     // Create new nft
     auto time_now = time_point_sec(current_time_point());
-    nft_tables.emplace(creator, [&](auto& nft_data) {
+    nft_tables.emplace(_self, [&](auto& nft_data) {
         nft_data.id = index_id;
         nft_data.creator = creator;
         nft_data.owner = owner;
@@ -59,7 +59,7 @@ ACTION nft::create(name creator, name owner, std::string explain, std::string wo
             nft_num_data.number = nft_num->number+1;
         });
     } else {
-        nftnumber_tables.emplace(creator, [&](auto& nft_num_data) {
+        nftnumber_tables.emplace(_self, [&](auto& nft_num_data) {
             nft_num_data.owner = owner;
             nft_num_data.number = 1;
         });
@@ -83,13 +83,13 @@ ACTION nft::createother(name creator, name owner, std::string explain, std::stri
     //auto time_now = time_point_sec(now());
     auto time_now = time_point_sec(current_time_point());
     id_type indexid = index_tables.available_primary_key();
-    index_tables.emplace(creator, [&](auto& index_data) {
+    index_tables.emplace(_self, [&](auto& index_data) {
         index_data.id = indexid;
         index_data.status = 1;
     });
 
     //id_type newid = nft_tables.available_primary_key();
-    nft_tables.emplace(creator, [&](auto& nft_data) {
+    nft_tables.emplace(_self, [&](auto& nft_data) {
         nft_data.id = indexid;
         nft_data.creator=creator;
         nft_data.owner = owner;
@@ -99,7 +99,7 @@ ACTION nft::createother(name creator, name owner, std::string explain, std::stri
         nft_data.worldview = worldview;
     });
 
-    assetmap_tables.emplace(creator, [&](auto& assetmapping_data) {
+    assetmap_tables.emplace(_self, [&](auto& assetmapping_data) {
         assetmapping_data.mappingid = game_tables.available_primary_key();
         assetmapping_data.fromid = indexid;
         assetmapping_data.targetid = targetid;
@@ -112,7 +112,7 @@ ACTION nft::createother(name creator, name owner, std::string explain, std::stri
             nftnum_data.number = nftnum->number+1;
         });
      } else {
-        nftnumber_tables.emplace(creator, [&](auto& nftnum_data) {
+        nftnumber_tables.emplace(_self, [&](auto& nftnum_data) {
             nftnum_data.owner = owner;
             nftnum_data.number = 1;
         });   
@@ -128,7 +128,7 @@ ACTION nft::addaccauth(name owner, name auth) {
     auto auth_find = accauth_tables.find(owner.value);
     check(auth_find == accauth_tables.end(), "owner account already authed");
 
-    accauth_tables.emplace(owner, [&](auto& auth_data) {
+    accauth_tables.emplace(_self, [&](auto& auth_data) {
         auth_data.owner = owner;
         auth_data.auth = auth;
     });
@@ -154,7 +154,7 @@ ACTION nft::addnftattr(name owner, id_type nftid, std::string key, std::string v
     auto iter = atrrmap.find(key);
     check(iter == atrrmap.end(), "key is exist");
     atrrmap.insert(std::pair<string, string>(key, value));  
-    nft_tables.modify(nft_find, owner, [&](auto& attr_data) {
+    nft_tables.modify(nft_find, _self, [&](auto& attr_data) {
         attr_data.attr = atrrmap;
     });
 }
@@ -179,7 +179,7 @@ ACTION nft::editnftattr(name owner, id_type nftid, std::string key, std::string 
     auto iter = atrrmap.find(key);
     check(iter != atrrmap.end(), "key is not exist");
     atrrmap[key] = value;  
-    nft_tables.modify(nft_find, owner, [&](auto& attr_data) {
+    nft_tables.modify(nft_find, _self, [&](auto& attr_data) {
         attr_data.attr = atrrmap;
     }); 
 }
@@ -204,7 +204,7 @@ ACTION nft::delnftattr(name owner, id_type nftid, string key) {
     auto iter = atrrmap.find(key);
     check(iter != atrrmap.end(), "key is not exist");
     atrrmap.erase(key); 
-    nft_tables.modify(nft_find, owner, [&](auto& attr_data) {
+    nft_tables.modify(nft_find, _self, [&](auto& attr_data) {
         attr_data.attr = atrrmap;
     }); 
 }
@@ -233,7 +233,7 @@ ACTION nft::addnftauth(name owner, name auth, id_type id) {
         check(nft_accauth_find->auth != owner, "account has not auth");
     }
 
-    nft_tables.modify(nft_find_id, owner, [&](auto& nft_data) {
+    nft_tables.modify(nft_find_id, _self, [&](auto& nft_data) {
         nft_data.auth = auth;
     });
 }
@@ -251,7 +251,7 @@ ACTION nft::delnftauth(name owner, id_type id) {
         check(nft_accauth_find->auth != owner, "account has not auth");
     }
 
-    nft_tables.modify(nft_find_id, owner, [&](auto& nft_data) {
+    nft_tables.modify(nft_find_id, _self, [&](auto& nft_data) {
         nft_data.auth = owner;
     });
 }
@@ -294,7 +294,7 @@ ACTION nft::transfernft(name from, name to, id_type id, std::string memo) {
             nftnum_data.number = nfttonum->number+1;
         });
     } else {
-        nftnumber_tables.emplace(from, [&](auto& nftnum_data) {
+        nftnumber_tables.emplace(_self, [&](auto& nftnum_data) {
             nftnum_data.owner = to;
             nftnum_data.number = 1;
         });   
@@ -315,7 +315,7 @@ ACTION nft::burn(name owner, id_type nftid) {
 
     auto nftnum = nftnumber_tables.find(nft_find->owner.value);
     if(nftnum->number != 1) {
-        nftnumber_tables.modify(nftnum,owner, [&](auto& nftnum_data) {
+        nftnumber_tables.modify(nftnum, _self, [&](auto& nftnum_data) {
             nftnum_data.number = nftnum->number-1;
         });
     } else {
@@ -376,7 +376,7 @@ ACTION nft::addchain(name owner, std::string chain) {
     }
     check(found, "chain is exists");
 
-    nftchain_tables.emplace(owner, [&](auto& nftchain_data) {
+    nftchain_tables.emplace(_self, [&](auto& nftchain_data) {
         nftchain_data.chainid = nftchain_tables.available_primary_key();
         nftchain_data.chain = chain;
         nftchain_data.status = 1;  
@@ -396,7 +396,7 @@ ACTION nft::setchain(name owner, id_type chainid, id_type status) {
     bool statusOk = ((status == 0 || status == 1) ? true : false);
     check(statusOk, "status must eq 0 or 1");
 
-    nftchain_tables.modify(nftchain_find, owner, [&](auto& nftchain_data) {
+    nftchain_tables.modify(nftchain_find, _self, [&](auto& nftchain_data) {
         nftchain_data.status = status;
     });
 }
@@ -414,7 +414,7 @@ ACTION nft::addcompattr(name owner, id_type id) {
     auto nft_find = composeattr_tables.find(id);
     check(nft_find == composeattr_tables.end(), "id already support compose");
     
-    composeattr_tables.emplace(owner, [&](auto& composeattr_data) {
+    composeattr_tables.emplace(_self, [&](auto& composeattr_data) {
         composeattr_data.nftid = id;
     });
 }
@@ -460,7 +460,7 @@ ACTION nft::setcompose(name owner, id_type firid, id_type secid) {
     }
     check(found, "group is exists");
 
-    compose_tables.emplace(owner, [&](auto& compose_data) {
+    compose_tables.emplace(_self, [&](auto& compose_data) {
         compose_data.id = compose_tables.available_primary_key();
         compose_data.firid = firid;
         compose_data.secid = secid;
@@ -519,7 +519,7 @@ ACTION nft::addgame(name owner, std::string gamename, std::string introduces) {
     check(found, "gamename is exists");
 
     auto time_now = time_point_sec(current_time_point());
-    game_tables.emplace(owner, [&](auto& game_data) {
+    game_tables.emplace(_self, [&](auto& game_data) {
         game_data.gameid = game_tables.available_primary_key();
         game_data.gamename = gamename;
         game_data.introduces = introduces;
@@ -541,7 +541,7 @@ ACTION nft::editgame(name owner, id_type gameid, std::string gamename, std::stri
     auto game_find = game_tables.find(gameid);
     check(game_find != game_tables.end(), "game id is not exist");
 
-    game_tables.modify(game_find, owner, [&](auto& game_data) {
+    game_tables.modify(game_find, _self, [&](auto& game_data) {
         game_data.gamename = gamename;
         game_data.introduces = introduces;
     });
@@ -558,7 +558,7 @@ ACTION nft::setgame(name owner, id_type gameid, id_type status) {
     check(statusOk, "status must eq 0 or 1");
     auto game_find = game_tables.find(gameid);
     check(game_find != game_tables.end(), "gameid is not exist");
-    game_tables.modify(game_find, owner, [&](auto& game_data) {
+    game_tables.modify(game_find, _self, [&](auto& game_data) {
         game_data.status = status;
     });
 }
@@ -589,7 +589,7 @@ ACTION nft::addgameattr(name owner, id_type gameid, std::string key, std::string
     auto iter = introducesmap.find(key);
     check(iter == introducesmap.end(), "key is exist");
     introducesmap.insert(std::pair<string, string>(key, value));  
-    game_tables.modify(game_find, owner, [&](auto& attr_data) {
+    game_tables.modify(game_find, _self, [&](auto& attr_data) {
         attr_data.gameattr = introducesmap;
     });
 }
@@ -608,7 +608,7 @@ ACTION nft::editgameattr(name owner, id_type gameid, std::string key, std::strin
     auto iter = introducesmap.find(key);
     check(iter != introducesmap.end(), "key is not exist");
     introducesmap[key] = value;  
-    game_tables.modify(game_find, owner, [&](auto& attr_data) {
+    game_tables.modify(game_find, _self, [&](auto& attr_data) {
         attr_data.gameattr = introducesmap;
     }); 
 }
@@ -627,7 +627,7 @@ ACTION nft::delgameattr(name owner, id_type gameid, string key) {
     auto iter = introducesmap.find(key);
     check(iter != introducesmap.end(), "key is not exist");
     introducesmap.erase(key); 
-    game_tables.modify(game_find, owner, [&](auto& attr_data) {
+    game_tables.modify(game_find, _self, [&](auto& attr_data) {
         attr_data.gameattr = introducesmap;
     }); 
 }
@@ -671,7 +671,7 @@ ACTION nft::addmapping(name owner, id_type fromid, id_type targetid, id_type cha
     }
     check(fromfound, "nft mapping from is exists");
 
-    assetmap_tables.emplace(owner, [&](auto& assetmapping_data) {
+    assetmap_tables.emplace(_self, [&](auto& assetmapping_data) {
         assetmapping_data.mappingid = assetmap_tables.available_primary_key();
         assetmapping_data.fromid = fromid;
         assetmapping_data.targetid = targetid;
@@ -822,7 +822,7 @@ void nft::trade(const name& from, const name& to, id_type orderid, const std::st
             nftnum_data.number = nfttonum->number + 1;
         });
     } else {
-        nftnumber_tables.emplace(to, [&](auto& nftnum_data) {
+        nftnumber_tables.emplace(_self, [&](auto& nftnum_data) {
             nftnum_data.owner = to;
             nftnum_data.number = 1;
         });   
