@@ -92,8 +92,6 @@ CONTRACT nft : public eosio::contract {
         ACTION editgameattr(name owner, id_type gameid, std::string key, std::string value);
         ACTION delgameattr(name owner, id_type gameid, std::string key);
 
-        ACTION orderclean(id_type orderid);
-
         void transfer(const name& from, const name& to, const asset& quantity, const std::string& memo);
 
         TABLE admins {

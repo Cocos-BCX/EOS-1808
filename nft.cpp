@@ -42,7 +42,6 @@ ACTION nft::create(name creator, name owner, std::string explain, std::string wo
     });
 
     // Create new nft
-    //auto time_now = time_point_sec(now());
     auto time_now = time_point_sec(current_time_point());
     nft_tables.emplace(creator, [&](auto& nft_data) {
         nft_data.id = index_id;
@@ -275,14 +274,14 @@ ACTION nft::transfernft(name from, name to, id_type id, std::string memo) {
         }       
     }
 
-    nft_tables.modify(nft_find_id, from, [&](auto& nft_data) {
+    nft_tables.modify(nft_find_id, _self, [&](auto& nft_data) {
         nft_data.auth = to;
         nft_data.owner = to;
      });
 
     auto nftnum = nftnumber_tables.find(owner_nft.value);
     if(nftnum->number != 1) {
-        nftnumber_tables.modify(nftnum,from, [&](auto& nftnum_data) {
+        nftnumber_tables.modify(nftnum, _self, [&](auto& nftnum_data) {
             nftnum_data.number = nftnum->number-1;
         });
     } else {
@@ -291,7 +290,7 @@ ACTION nft::transfernft(name from, name to, id_type id, std::string memo) {
 
     auto nfttonum = nftnumber_tables.find(to.value);
     if(nfttonum != nftnumber_tables.end()) {
-        nftnumber_tables.modify(nfttonum, from, [&](auto& nftnum_data) {
+        nftnumber_tables.modify(nfttonum, _self, [&](auto& nftnum_data) {
             nftnum_data.number = nfttonum->number+1;
         });
     } else {
@@ -519,7 +518,6 @@ ACTION nft::addgame(name owner, std::string gamename, std::string introduces) {
     }
     check(found, "gamename is exists");
 
-    //auto time_now = time_point_sec(now());
     auto time_now = time_point_sec(current_time_point());
     game_tables.emplace(owner, [&](auto& game_data) {
         game_data.gameid = game_tables.available_primary_key();
@@ -711,12 +709,6 @@ ACTION nft::delmapping(name owner, id_type fromid, id_type chainid) {
     assetmap_tables.erase(nftmap_find);
 }
 
-ACTION nft::orderclean(id_type orderid) {
-    auto iter = order_tables.find(orderid);
-    check(iter != order_tables.end(), std::to_string(orderid) + ", orderclean failed, order is not exist");
-    order_tables.erase(iter);
-}
-
 void nft::createorder(name owner, id_type nftid, asset amount, std::string side, std::string memo) {
     check(is_account(owner), "issuer account does not exist");
     require_auth(owner);
@@ -905,7 +897,7 @@ void nft::transfer(const name& from, const name& to, const asset& quantity, cons
     check(is_account(from), "from account does not exist");
     check(is_account(to), "to account does not exist");
     check(quantity.symbol.is_valid(), "invalid symbol name");
-    //check(quantity.symbol.code() == "EOS", "transfer must be EOS");
+    check(quantity.symbol.code().to_string() == "EOS", "currency must be EOS");
     check(quantity.amount >= FEE, "transfer fee too small");
     check(memo.size() <= 256 && !memo.empty(), "memo has more than 256 bytes or is empty");
     if (from == _self || to != _self) {
@@ -980,6 +972,6 @@ extern "C" {                                                                    
 }
 
 EOSIO_DISPATCH(nft, (addadmin)(deladmin)(create)(createother)(addnftattr)(editnftattr)(delnftattr)(addaccauth)
-    (delaccauth)(addnftauth)(delnftauth)(transfer)(addchain)(setchain)(addcompattr)(delcompattr)(setcompose)
+    (delaccauth)(addnftauth)(delnftauth)(transfernft)(addchain)(setchain)(addcompattr)(delcompattr)(setcompose)
     (delcompose)(addgame)(setgame)(editgame)(delgame)(addgameattr)(editgameattr)(delgameattr)(addmapping)
-    (delmapping)(burn)(orderclean))
+    (delmapping)(burn))

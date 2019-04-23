@@ -659,16 +659,6 @@
             ]
         },
         {
-            "name": "orderclean",
-            "base": "",
-            "fields": [
-                {
-                    "name": "orderid",
-                    "type": "id_type"
-                }
-            ]
-        },
-        {
             "name": "pair_string_string",
             "base": "",
             "fields": [
@@ -878,11 +868,6 @@
         {
             "name": "editnftattr",
             "type": "editnftattr",
-            "ricardian_contract": ""
-        },
-        {
-            "name": "orderclean",
-            "type": "orderclean",
             "ricardian_contract": ""
         },
         {
