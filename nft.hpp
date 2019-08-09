@@ -38,227 +38,125 @@ size_t sub2sep( const std::string& input, std::string& output, const char& separ
     return pos;
 }
 
+//参照string_to_name，主要是给table中二级索引使用的，由于二级索引可以重复，所以这里并不是严格的hash
+static constexpr uint64_t string_to_uint64( const char* str )
+{   
+    uint64_t key = 0;
+    int i = 0;
+    for ( ; str[i] && i < 12; ++i) {
+        key |= (uint64_t(str[i]) & 0x1f) << (64 - 5 * (i + 1));
+    }
+    return key;
+}
+
+enum nft_permission_flags
+{
+    worldview_operation = 0x01,   
+    nft_operation = 0x02
+    // white_list = 0x02,                  // 0000 0010
+    // override_authority = 0x04,          // 0000 0100
+    // transfer_restricted = 0x08,         // 0000 1000
+    // disable_force_settle = 0x10,        // 0001 0000
+    // global_settle = 0x20,               // 0010 0000
+    // disable_confidential = 0x40,        // 0100 0000
+    // witness_fed_asset = 0x80,           // 1000 0000
+    // committee_fed_asset = 0x100         // 1 0000 0000
+};
+
 CONTRACT nft : public eosio::contract {
     public:
         using contract::contract;
 
         nft(name receiver, name code, datastream<const char*> ds)
             : contract(receiver, code, ds), 
-            nft_tables(receiver, receiver.value),
-            accauth_tables(receiver, receiver.value),
-            nftchain_tables(receiver, receiver.value),
-            compose_tables(receiver, receiver.value),
-            game_tables(receiver, receiver.value),
-            assetmap_tables(receiver, receiver.value),
-            admin_tables(receiver, receiver.value),
-            composeattr_tables(receiver, receiver.value),
-            index_tables(receiver, receiver.value),
-            nftnumber_tables(receiver, receiver.value),
-            order_tables(receiver, receiver.value)
+            admintables(receiver, receiver.value),
+            worldviewstables(receiver, receiver.value),
+            symbolstables(receiver, receiver.value)
+
+            //nfttables(receiver, receiver.value),
         {}
        
-        ACTION addadmin(name admin);
-        ACTION deladmin(name admin);
+        // ACTION addadmin(name admin);
+        // ACTION deladmin(name admin);
 
-        ACTION create(name creator, name owner, std::string explain, std::string worldview);
-        ACTION createother(name creator, name owner, std::string explain, std::string worldview, id_type chainid, id_type targetid);
-        ACTION addnftattr(name owner, id_type nftid, std::string key, std::string value);
-        ACTION editnftattr(name owner, id_type nftid, std::string key, std::string value);
-        ACTION delnftattr(name owner, id_type nftid, std::string key);
-
-        ACTION addaccauth(name owner, name auth);
-        ACTION delaccauth(name owner);
-        ACTION addnftauth(name owner, name auth, id_type id);
-        ACTION delnftauth(name owner, id_type id);
-        ACTION transfernft(name from, name to, id_type id, std::string memo);
-        ACTION burn(name owner, id_type nftid);
-
-        ACTION addchain(name owner, std::string chain);
-        ACTION setchain(name owner, id_type chainid, id_type status);
-        
-        ACTION addcompattr(name owner, id_type id);
-        ACTION delcompattr(name owner, id_type id);
-        ACTION setcompose(name owner, id_type firid, id_type secid);
-        ACTION delcompose(name owner, id_type firid, id_type secid);
-
-        ACTION addmapping(name owner, id_type fromid, id_type targetid, id_type chainid);
-        ACTION delmapping(name owner, id_type fromid, id_type chainid);
-        
-        ACTION addgame(name owner, std::string gamename, std::string introduces);
-        ACTION editgame(name owner, id_type gameid, std::string gamename, std::string introduces);
-        ACTION setgame(name owner, id_type gameid, id_type status);
-        ACTION delgame(name owner, id_type gameid);
-        ACTION addgameattr(name owner, id_type gameid, std::string key, std::string value);
-        ACTION editgameattr(name owner, id_type gameid, std::string key, std::string value);
-        ACTION delgameattr(name owner, id_type gameid, std::string key);
+        // ACTION create(name creator, name owner, std::string explain, std::string worldview);
 
         void transfer(const name& from, const name& to, const asset& quantity, const std::string& memo);
 
+        ACTION addadmin(name account, uint32_t flag);
+        ACTION updateperm(name account, uint32_t flag);
+        ACTION deladmin(name account);
+
+        ACTION addworldview(name creator, const std::string& worldview);
+        ACTION delworldview(uint64_t id, name owner);
+
+        ACTION addsymbol(const symbol& sym, name creator, const std::string& nick, const std::string& desc);
+        ACTION delsymbol(const symbol& sym);
+
         TABLE admins {
-            name            admin;
+            name            account;
+            uint32_t        flag;
 
-            uint64_t primary_key() const { return admin.value; }
+            uint64_t primary_key() const { return account.value; }
         };
 
-        TABLE nftindexs {
+        TABLE worldviews {
             id_type         id;
-            id_type         status;
-
-            uint64_t primary_key() const { return id; }
-            uint64_t get_status() const { return status; }
-        };
-
-        TABLE nftnumber {
-            name            owner;
-            id_type         number;
-
-            uint64_t primary_key() const { return owner.value; }
-        };
-
-        TABLE nftts {
-            id_type         id;
+            id_type         worldviewkey;  //worldview --> uint64_t
             name            creator;
-            name            owner;
-            name            auth;
-            std::string     explain;
-            time_point_sec  createtime;
             std::string     worldview;
-            std::map<std::string, std::string> attr;
-            //id_type composeattr;
 
             uint64_t primary_key() const { return id; }
-            uint64_t get_owner() const { return owner.value; }
             uint64_t get_creator() const { return creator.value; }
+            uint64_t get_wvkey() const { return worldviewkey; }
         };
 
-        TABLE composeattr {
-            id_type         nftid;
+        TABLE symbols {
+            symbol          sym;
+            name            creator;
+            std::string     nick;
+            std::string     desc;
 
-            uint64_t primary_key() const { return nftid; }
+            uint64_t primary_key() const { return sym.code().raw(); }
         };
+
+        // TABLE nftts {
+        //     id_type         id;
+        //     name            creator;
+        //     name            owner;
+        //     name            auth;
+        //     std::string     explain;
+        //     time_point_sec  createtime;
+        //     std::string     worldview;
+        //     std::map<std::string, std::string> attr;
+        //     //id_type composeattr;
+
+        //     uint64_t primary_key() const { return id; }
+        //     uint64_t get_owner() const { return owner.value; }
+        //     uint64_t get_creator() const { return creator.value; }
+        // };
         
-        TABLE accauth {
-            name            owner;
-            name            auth;
 
-            uint64_t primary_key() const { return owner.value; }
-            uint64_t get_auth() const { return auth.value; }
-        };
 
-        TABLE nftchains {
-            id_type         chainid;
-            std::string     chain;
-            id_type         status;
+        using adminsindex = eosio::multi_index<"admins"_n, admins>;
 
-            uint64_t primary_key() const { return chainid; }
-            uint64_t get_status() const { return status; }
-        };
+        using worldviewsindex = eosio::multi_index<"worldviews"_n, worldviews,
+            indexed_by< "bycreator"_n, const_mem_fun< worldviews, uint64_t, &worldviews::get_creator> >,
+            indexed_by< "bywvkey"_n, const_mem_fun< worldviews, uint64_t, &worldviews::get_wvkey> >>;
 
-        TABLE composes {
-            id_type         id;
-            id_type         firid;
-            id_type         secid;
-            id_type         status;
+        using symbolsindex = eosio::multi_index< "symbols"_n, symbols >;
+ 
 
-            uint64_t primary_key() const { return id; }
-            uint64_t get_fir() const { return firid; }
-            uint64_t get_sec() const { return secid; }
-            uint64_t get_status() const { return status; }
-        };
-
-        TABLE assetmaps {
-            id_type         mappingid;
-            id_type         fromid;
-            id_type         targetid;
-            id_type         chainid;
-
-            uint64_t primary_key() const { return mappingid; }
-            uint64_t get_fromid() const { return fromid; }
-            uint64_t get_targetid() const { return targetid; }
-            uint64_t get_chainid() const { return chainid; }
-        };
-
-        TABLE nftgame {
-            id_type         gameid;
-            std::string     gamename;
-            std::string     introduces;
-            id_type         status;
-            id_type         index;
-            time_point_sec  createtime;
-            std::map<std::string, std::string> gameattr;
-
-            uint64_t primary_key() const { return gameid; }
-            uint64_t get_status() const { return status; }
-            uint64_t get_index() const { return index; }
-        };
-
-       TABLE order {
-            id_type         id;
-            name            owner;
-            id_type         nftid;
-            asset           price;
-            std::string     side;
-            std::string     memo;
-            time_point_sec  createtime;
-
-            uint64_t primary_key() const { return id; }
-            uint64_t get_owner() const { return owner.value; }
-        };
-
-        using admins_index = eosio::multi_index<"admins"_n, admins>;
-
-        using nftindex_index = eosio::multi_index<"nftindexs"_n, nftindexs,
-            indexed_by< "bystatus"_n, const_mem_fun< nftindexs, uint64_t, &nftindexs::get_status> > >;
-
-        using nftnumber_index = eosio::multi_index<"nftnumber"_n, nftnumber>;
-
-        using composeattr_index = eosio::multi_index<"composeattr"_n, composeattr>;
-
-        using nfts_index = eosio::multi_index<"nftts"_n, nftts,
-            indexed_by< "byowner"_n, const_mem_fun< nftts, uint64_t, &nftts::get_owner> >,
-            indexed_by< "bycreator"_n, const_mem_fun< nftts, uint64_t, &nftts::get_creator> >>;
-
-        using accauth_index = eosio::multi_index<"accauth"_n, accauth,
-            indexed_by< "byauth"_n, const_mem_fun< accauth, uint64_t, &accauth::get_auth> > >;
-
-        using nftchain_index = eosio::multi_index<"nftchains"_n, nftchains,
-            indexed_by< "bystatus"_n, const_mem_fun< nftchains, uint64_t, &nftchains::get_status> > >;
-
-        using compose_index = eosio::multi_index<"composes"_n, composes,
-            indexed_by< "byfir"_n, const_mem_fun< composes, uint64_t, &composes::get_fir> >,
-            indexed_by< "bysec"_n, const_mem_fun< composes, uint64_t, &composes::get_sec> >,
-            indexed_by< "bystatus"_n, const_mem_fun< composes, uint64_t, &composes::get_status> > >;
-
-        using nftgame_index = eosio::multi_index<"nftgame"_n, nftgame,
-            indexed_by< "byindex"_n, const_mem_fun< nftgame, uint64_t, &nftgame::get_index> >,
-            indexed_by< "bystatus"_n, const_mem_fun< nftgame, uint64_t, &nftgame::get_status> > >;
-            
-        using assetmaps_index = eosio::multi_index<"assetmaps"_n, assetmaps,
-            indexed_by< "byfromid"_n, const_mem_fun< assetmaps, uint64_t, &assetmaps::get_fromid> >,
-            indexed_by< "bytargetid"_n, const_mem_fun< assetmaps, uint64_t, &assetmaps::get_targetid> >,
-            indexed_by< "bychainid"_n, const_mem_fun< assetmaps, uint64_t, &assetmaps::get_chainid> > >;
-
-        using order_index = eosio::multi_index<"orders3"_n, order,
-            indexed_by< "byowner"_n, const_mem_fun< order, uint64_t, &order::get_owner> > >;
+        // using nfts_index = eosio::multi_index<"nftts"_n, nftts,
+        //     indexed_by< "byowner"_n, const_mem_fun< nftts, uint64_t, &nftts::get_owner> >,
+        //     indexed_by< "bycreator"_n, const_mem_fun< nftts, uint64_t, &nftts::get_creator> >>;
 
     private:
-        admins_index        admin_tables;
-        nftnumber_index     nftnumber_tables;
-        nftindex_index      index_tables;
-        composeattr_index   composeattr_tables;
-        nfts_index          nft_tables;
-        accauth_index       accauth_tables;
-        nftchain_index      nftchain_tables;
-        compose_index       compose_tables;
-        nftgame_index       game_tables;
-        assetmaps_index     assetmap_tables;
-        order_index         order_tables;
+        adminsindex        admintables;
+        worldviewsindex    worldviewstables;
+        symbolsindex       symbolstables;
 
-    private:
-        void createorder(name owner, id_type nftid, asset amount, std::string side, std::string memo);
-        void cancelorder(name owner, id_type id, std::string memo);
-        void trade(const name& from, const name& to, id_type orderid, const std::string& side, const std::string& memo);
+        //nftsindex          nft_tables;
 
-        void parse_memo(std::string memo, std::string& action, std::map<std::string, std::string>& params);
 };
 
