@@ -38,7 +38,8 @@ size_t sub2sep( const std::string& input, std::string& output, const char& separ
     return pos;
 }
 
-//参照string_to_name，主要是给table中二级索引使用的，由于二级索引可以重复，所以这里并不是严格的hash
+//Refer to string_to_name, mainly for the secondary index in the table, 
+//because the secondary index can be repeated, so here is not a strict hash
 static constexpr uint64_t string_to_uint64( const char* str )
 {   
     uint64_t key = 0;
@@ -53,14 +54,7 @@ enum nft_permission_flags
 {
     worldview_operation = 0x01,   
     nft_operation = 0x02
-    // white_list = 0x02,                  // 0000 0010
-    // override_authority = 0x04,          // 0000 0100
-    // transfer_restricted = 0x08,         // 0000 1000
-    // disable_force_settle = 0x10,        // 0001 0000
-    // global_settle = 0x20,               // 0010 0000
-    // disable_confidential = 0x40,        // 0100 0000
-    // witness_fed_asset = 0x80,           // 1000 0000
-    // committee_fed_asset = 0x100         // 1 0000 0000
+    // 0x04 0x08 0x10 0x20 0x40 0x80 0x100
 };
 
 CONTRACT nft : public eosio::contract {
@@ -92,9 +86,11 @@ CONTRACT nft : public eosio::contract {
         ACTION relatenh(name owner, uint64_t pid, uint64_t cid, const std::string& contractid, bool relate);
         ACTION burn(uint64_t id, name owner);
 
-        //test
-        ACTION delnh(uint64_t id);
-        ACTION delrel(uint64_t id);
+        // //test
+        // ACTION delnh(uint64_t id);
+        // ACTION delrel(uint64_t id);
+
+        void transfernh(const name& from, const name& to, uint64_t asset);
 
         TABLE admins {
             name            account;

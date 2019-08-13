@@ -123,26 +123,6 @@
             ]
         },
         {
-            "name": "delnh",
-            "base": "",
-            "fields": [
-                {
-                    "name": "id",
-                    "type": "uint64"
-                }
-            ]
-        },
-        {
-            "name": "delrel",
-            "base": "",
-            "fields": [
-                {
-                    "name": "id",
-                    "type": "uint64"
-                }
-            ]
-        },
-        {
             "name": "delsymbol",
             "base": "",
             "fields": [
@@ -362,16 +342,6 @@
         {
             "name": "deladmin",
             "type": "deladmin",
-            "ricardian_contract": ""
-        },
-        {
-            "name": "delnh",
-            "type": "delnh",
-            "ricardian_contract": ""
-        },
-        {
-            "name": "delrel",
-            "type": "delrel",
             "ricardian_contract": ""
         },
         {

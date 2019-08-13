@@ -8,9 +8,9 @@ ACTION nft::addadmin(name account, uint32_t flag) {
     check(is_account(account), account.to_string() + " account does not exist");
     auto iter = admintable.find(account.value);
     check(iter == admintable.end(),  " has been added");
-    admintable.emplace(_self, [&](auto& data) {
-        data.account = account;
-        data.flag = flag;
+    admintable.emplace(_self, [&](auto& d) {
+        d.account = account;
+        d.flag = flag;
     });
 }
 
@@ -19,8 +19,8 @@ ACTION nft::updateperm(name account, uint32_t flag) {
     check(is_account(account), account.to_string() + " account does not exist");
     auto iter = admintable.find(account.value);
     check(iter != admintable.end(), account.to_string() + " account does not exist in table");
-    admintable.modify(iter, _self, [&](auto& data) {
-        data.flag = flag;
+    admintable.modify(iter, _self, [&](auto& d) {
+        d.flag = flag;
     });
 }
 
@@ -50,11 +50,11 @@ ACTION nft::addworldview(name creator, const std::string& worldview) {
         check(lower_iter->worldview != worldview, worldview + " worldview already exists");
     }
 
-    worldviewstable.emplace(_self, [&](auto& data) {
-        data.id = worldviewstable.available_primary_key();
-        data.worldviewkey = key;
-        data.creator = creator;
-        data.worldview = worldview;
+    worldviewstable.emplace(_self, [&](auto& d) {
+        d.id = worldviewstable.available_primary_key();
+        d.worldviewkey = key;
+        d.creator = creator;
+        d.worldview = worldview;
     });
 }
 
@@ -79,11 +79,11 @@ ACTION nft::addsymbol(const symbol& sym, name creator, const std::string& nick, 
     auto existing = symbolstable.find( sym.code().raw() );
     check( existing == symbolstable.end(), "token with symbol already exists" );
 
-    symbolstable.emplace(_self, [&](auto& data) {
-        data.sym = sym;
-        data.creator = creator;
-        data.nick = nick;
-        data.desc = desc;
+    symbolstable.emplace(_self, [&](auto& d) {
+        d.sym = sym;
+        d.creator = creator;
+        d.nick = nick;
+        d.desc = desc;
     });
 }
 
@@ -111,30 +111,30 @@ ACTION nft::createnh(name creator, name owner, const symbol& sym, const std::str
 
     // Create new nft
     auto time_now = time_point_sec(current_time_point());
-    nhassetstable.emplace(_self, [&](auto& data) {
-        data.id = nhassetstable.available_primary_key();
-        data.creator = creator;
-        data.owner = owner;
-        data.auth = owner;
-        data.sym = sym;
-        data.explain = basedesc;
-        data.createtime = time_now;
-        data.worldview = worldview;
-        data.conrel = map<std::string, id_type>();
+    nhassetstable.emplace(_self, [&](auto& d) {
+        d.id = nhassetstable.available_primary_key();
+        d.creator = creator;
+        d.owner = owner;
+        d.auth = owner;
+        d.sym = sym;
+        d.explain = basedesc;
+        d.createtime = time_now;
+        d.worldview = worldview;
+        d.conrel = map<std::string, id_type>();
     });
 }
 
-ACTION nft::delnh(uint64_t id) {
-    auto iter = nhassetstable.find(id);
-    check(iter != nhassetstable.end(), "not exist in nhassetstable table ");
-    nhassetstable.erase(iter);
-}
+// ACTION nft::delnh(uint64_t id) {
+//     auto iter = nhassetstable.find(id);
+//     check(iter != nhassetstable.end(), "not exist in nhassetstable table ");
+//     nhassetstable.erase(iter);
+// }
 
-ACTION nft::delrel(uint64_t id) {
-    auto iter = nhrelatestable.find(id);
-    check(iter != nhrelatestable.end(), "not exist in nhrelatestable table ");
-    nhrelatestable.erase(iter); 
-}
+// ACTION nft::delrel(uint64_t id) {
+//     auto iter = nhrelatestable.find(id);
+//     check(iter != nhrelatestable.end(), "not exist in nhrelatestable table ");
+//     nhrelatestable.erase(iter); 
+// }
 
 ACTION nft::relatenh(name owner, uint64_t pid, uint64_t cid, const std::string& contractid, bool relate) {
     require_auth(owner);
@@ -148,7 +148,7 @@ ACTION nft::relatenh(name owner, uint64_t pid, uint64_t cid, const std::string& 
     auto citer = nhassetstable.find(cid);
     check(citer != nhassetstable.end(), "child nft asset does not exist. asset id = " + std::to_string(cid));
     check(citer->owner == owner, "You're not the child nh asset's owner, so you can't relate it");
-
+    check(piter->worldview == citer->worldview, "different worldviews");
     const auto &iter = piter->conrel.find(contractid);
     if(relate) {
         check(citer->conrel.size() == 0, "child asset had be related");
@@ -202,35 +202,49 @@ ACTION nft::burn(uint64_t id, name owner) {
     auto iter = nhassetstable.find(id);
     check(iter != nhassetstable.end(), " parent nft asset does not exist. asset id = " + std::to_string(id));
     check(iter->owner == owner, "You're not the parent nh asset's owner, so you can't relate it.");
-
-    if(!iter->conrel.empty()) {
-        for(auto it = iter->conrel.begin(); it != iter->conrel.end(); it++) {
-            auto relateID = it->second;
-            auto rIter = nhrelatestable.find(it->second);
-            if(rIter != nhrelatestable.end()) {
-                //解除关联
-                auto contract = rIter->contract;
-                for(auto pIter = rIter->parent.begin(); pIter != rIter->parent.end(); pIter++) {
-                    auto nhIter = nhassetstable.find(*pIter);
-                    check(nhIter != nhassetstable.end(), " parent nft asset does not exist. asset id = " + std::to_string(id));
-                    check(nhIter->owner == owner, "You're not the parent nh asset's owner, so you can't relate it.");
-                    if(nhIter->conrel.find(contract) != nhIter->conrel.end()) {
-                        nhassetstable.modify(nhIter, _self, [&](auto &d) { d.conrel.erase(contract); });
-                    }
-                }
-                for(auto pIter = rIter->child.begin(); pIter != rIter->child.end(); pIter++) {
-                    auto nhIter = nhassetstable.find(*pIter);
-                    check(nhIter != nhassetstable.end(), " parent nft asset does not exist. asset id = " + std::to_string(id));
-                    check(nhIter->owner == owner, "You're not the parent nh asset's owner, so you can't relate it.");
-                    if(nhIter->conrel.find(contract) != nhIter->conrel.end()) {
-                        nhassetstable.modify(nhIter, _self, [&](auto &d) { d.conrel.erase(contract); });
-                    }
-                }
-                nhrelatestable.erase(rIter);
-            }
-        }
-    }
+    check(iter->conrel.empty(), "Please disconnect first ");
     nhassetstable.erase(iter);
+
+    // if(!iter->conrel.empty()) {
+    //     for(auto it = iter->conrel.begin(); it != iter->conrel.end(); it++) {
+    //         auto relateID = it->second;
+    //         auto rIter = nhrelatestable.find(it->second);
+    //         if(rIter != nhrelatestable.end()) {
+    //             //解除关联
+    //             auto contract = rIter->contract;
+    //             for(auto pIter = rIter->parent.begin(); pIter != rIter->parent.end(); pIter++) {
+    //                 auto nhIter = nhassetstable.find(*pIter);
+    //                 check(nhIter != nhassetstable.end(), " parent nft asset does not exist. asset id = " + std::to_string(id));
+    //                 check(nhIter->owner == owner, "You're not the parent nh asset's owner, so you can't relate it.");
+    //                 if(nhIter->conrel.find(contract) != nhIter->conrel.end()) {
+    //                     nhassetstable.modify(nhIter, _self, [&](auto &d) { d.conrel.erase(contract); });
+    //                 }
+    //             }
+    //             for(auto pIter = rIter->child.begin(); pIter != rIter->child.end(); pIter++) {
+    //                 auto nhIter = nhassetstable.find(*pIter);
+    //                 check(nhIter != nhassetstable.end(), " parent nft asset does not exist. asset id = " + std::to_string(id));
+    //                 check(nhIter->owner == owner, "You're not the parent nh asset's owner, so you can't relate it.");
+    //                 if(nhIter->conrel.find(contract) != nhIter->conrel.end()) {
+    //                     nhassetstable.modify(nhIter, _self, [&](auto &d) { d.conrel.erase(contract); });
+    //                 }
+    //             }
+    //             nhrelatestable.erase(rIter);
+    //         }
+    //     }
+    // }
+}
+
+void nft::transfernh(const name& from, const name& to, uint64_t asset) {
+    require_auth(from);
+    check(is_account(from), "from account does not exist");
+    check(is_account(to), "to account does not exist");
+    check(from != to, "can't transfer to oneself");
+    auto iter = nhassetstable.find(asset);
+    check(iter != nhassetstable.end(), "NH asset does not exist. asset id = " + std::to_string(asset));
+    check(iter->owner == from, "from account is not equal to asset.owner");
+    nhassetstable.modify(iter, _self, [&](auto& d) {
+        d.owner = to;
+     });
 }
 
 void nft::transfer(const name& from, const name& to, const asset& quantity, const std::string& memo) {
@@ -259,6 +273,7 @@ extern "C" {                                                                    
 }
 
 EOSIO_DISPATCH(nft, (addadmin)(updateperm)(deladmin)(addworldview)(delworldview)(addsymbol)(delsymbol)
-    (createnh)(relatenh)(burn)(delnh)(delrel)
+    (createnh)(relatenh)(burn)
+    //(delnh)(delrel)
  )
 
