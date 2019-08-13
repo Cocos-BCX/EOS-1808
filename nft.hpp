@@ -69,17 +69,12 @@ CONTRACT nft : public eosio::contract {
 
         nft(name receiver, name code, datastream<const char*> ds)
             : contract(receiver, code, ds), 
-            admintables(receiver, receiver.value),
-            worldviewstables(receiver, receiver.value),
-            symbolstables(receiver, receiver.value)
-
-            //nfttables(receiver, receiver.value),
+            admintable(receiver, receiver.value),
+            worldviewstable(receiver, receiver.value),
+            symbolstable(receiver, receiver.value),
+            nhassetstable(receiver, receiver.value),
+            nhrelatestable(receiver, receiver.value)
         {}
-       
-        // ACTION addadmin(name admin);
-        // ACTION deladmin(name admin);
-
-        // ACTION create(name creator, name owner, std::string explain, std::string worldview);
 
         void transfer(const name& from, const name& to, const asset& quantity, const std::string& memo);
 
@@ -92,6 +87,14 @@ CONTRACT nft : public eosio::contract {
 
         ACTION addsymbol(const symbol& sym, name creator, const std::string& nick, const std::string& desc);
         ACTION delsymbol(const symbol& sym);
+
+        ACTION createnh(name creator, name owner, const symbol& sym, const std::string& worldview, const std::string& basedesc);
+        ACTION relatenh(name owner, uint64_t pid, uint64_t cid, const std::string& contractid, bool relate);
+        ACTION burn(uint64_t id, name owner);
+
+        //test
+        ACTION delnh(uint64_t id);
+        ACTION delrel(uint64_t id);
 
         TABLE admins {
             name            account;
@@ -108,7 +111,7 @@ CONTRACT nft : public eosio::contract {
 
             uint64_t primary_key() const { return id; }
             uint64_t get_creator() const { return creator.value; }
-            uint64_t get_wvkey() const { return worldviewkey; }
+            uint64_t get_key() const { return worldviewkey; }
         };
 
         TABLE symbols {
@@ -120,43 +123,54 @@ CONTRACT nft : public eosio::contract {
             uint64_t primary_key() const { return sym.code().raw(); }
         };
 
-        // TABLE nftts {
-        //     id_type         id;
-        //     name            creator;
-        //     name            owner;
-        //     name            auth;
-        //     std::string     explain;
-        //     time_point_sec  createtime;
-        //     std::string     worldview;
-        //     std::map<std::string, std::string> attr;
-        //     //id_type composeattr;
+        TABLE nhassets {
+            id_type         id;
+            name            creator;
+            name            owner;
+            symbol          sym;
+            name            auth;
+            std::string     explain;
+            time_point_sec  createtime;
+            std::string     worldview;
+            map<std::string, id_type> conrel;  //contractID - relateID
 
-        //     uint64_t primary_key() const { return id; }
-        //     uint64_t get_owner() const { return owner.value; }
-        //     uint64_t get_creator() const { return creator.value; }
-        // };
-        
+            uint64_t primary_key() const { return id; }
+            uint64_t get_owner() const { return owner.value; }
+            uint64_t get_creator() const { return creator.value; }
+        };
 
+        TABLE nhrelates {
+            id_type         id;
+            id_type         contractkey;
+            std::string     contract;  //contract_id or game_id
+            vector<id_type> parent;    //asset id
+            vector<id_type> child;     //nh asset id
+
+            uint64_t primary_key() const { return id; }
+            uint64_t get_key() const { return contractkey; }
+        };
 
         using adminsindex = eosio::multi_index<"admins"_n, admins>;
 
         using worldviewsindex = eosio::multi_index<"worldviews"_n, worldviews,
             indexed_by< "bycreator"_n, const_mem_fun< worldviews, uint64_t, &worldviews::get_creator> >,
-            indexed_by< "bywvkey"_n, const_mem_fun< worldviews, uint64_t, &worldviews::get_wvkey> >>;
+            indexed_by< "bykey"_n, const_mem_fun< worldviews, uint64_t, &worldviews::get_key> >>;
 
         using symbolsindex = eosio::multi_index< "symbols"_n, symbols >;
- 
 
-        // using nfts_index = eosio::multi_index<"nftts"_n, nftts,
-        //     indexed_by< "byowner"_n, const_mem_fun< nftts, uint64_t, &nftts::get_owner> >,
-        //     indexed_by< "bycreator"_n, const_mem_fun< nftts, uint64_t, &nftts::get_creator> >>;
+        using nhassetsindex = eosio::multi_index<"nhassets"_n, nhassets,
+            indexed_by< "byowner"_n, const_mem_fun< nhassets, uint64_t, &nhassets::get_owner> >,
+            indexed_by< "bycreator"_n, const_mem_fun< nhassets, uint64_t, &nhassets::get_creator> >>;
+
+        using nhrelatesindex = eosio::multi_index<"nhrelates"_n, nhrelates,
+            indexed_by< "bykey"_n, const_mem_fun< nhrelates, uint64_t, &nhrelates::get_key> >>;
 
     private:
-        adminsindex        admintables;
-        worldviewsindex    worldviewstables;
-        symbolsindex       symbolstables;
-
-        //nftsindex          nft_tables;
+        adminsindex        admintable;
+        worldviewsindex    worldviewstable;
+        symbolsindex       symbolstable;
+        nhassetsindex      nhassetstable;
+        nhrelatesindex     nhrelatestable;
 
 };
 

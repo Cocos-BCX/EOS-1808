@@ -73,12 +73,72 @@
             ]
         },
         {
+            "name": "burn",
+            "base": "",
+            "fields": [
+                {
+                    "name": "id",
+                    "type": "uint64"
+                },
+                {
+                    "name": "owner",
+                    "type": "name"
+                }
+            ]
+        },
+        {
+            "name": "createnh",
+            "base": "",
+            "fields": [
+                {
+                    "name": "creator",
+                    "type": "name"
+                },
+                {
+                    "name": "owner",
+                    "type": "name"
+                },
+                {
+                    "name": "sym",
+                    "type": "symbol"
+                },
+                {
+                    "name": "worldview",
+                    "type": "string"
+                },
+                {
+                    "name": "basedesc",
+                    "type": "string"
+                }
+            ]
+        },
+        {
             "name": "deladmin",
             "base": "",
             "fields": [
                 {
                     "name": "account",
                     "type": "name"
+                }
+            ]
+        },
+        {
+            "name": "delnh",
+            "base": "",
+            "fields": [
+                {
+                    "name": "id",
+                    "type": "uint64"
+                }
+            ]
+        },
+        {
+            "name": "delrel",
+            "base": "",
+            "fields": [
+                {
+                    "name": "id",
+                    "type": "uint64"
                 }
             ]
         },
@@ -103,6 +163,114 @@
                 {
                     "name": "owner",
                     "type": "name"
+                }
+            ]
+        },
+        {
+            "name": "nhassets",
+            "base": "",
+            "fields": [
+                {
+                    "name": "id",
+                    "type": "id_type"
+                },
+                {
+                    "name": "creator",
+                    "type": "name"
+                },
+                {
+                    "name": "owner",
+                    "type": "name"
+                },
+                {
+                    "name": "sym",
+                    "type": "symbol"
+                },
+                {
+                    "name": "auth",
+                    "type": "name"
+                },
+                {
+                    "name": "explain",
+                    "type": "string"
+                },
+                {
+                    "name": "createtime",
+                    "type": "time_point_sec"
+                },
+                {
+                    "name": "worldview",
+                    "type": "string"
+                },
+                {
+                    "name": "conrel",
+                    "type": "pair_string_id_type[]"
+                }
+            ]
+        },
+        {
+            "name": "nhrelates",
+            "base": "",
+            "fields": [
+                {
+                    "name": "id",
+                    "type": "id_type"
+                },
+                {
+                    "name": "contractkey",
+                    "type": "id_type"
+                },
+                {
+                    "name": "contract",
+                    "type": "string"
+                },
+                {
+                    "name": "parent",
+                    "type": "id_type[]"
+                },
+                {
+                    "name": "child",
+                    "type": "id_type[]"
+                }
+            ]
+        },
+        {
+            "name": "pair_string_id_type",
+            "base": "",
+            "fields": [
+                {
+                    "name": "key",
+                    "type": "string"
+                },
+                {
+                    "name": "value",
+                    "type": "id_type"
+                }
+            ]
+        },
+        {
+            "name": "relatenh",
+            "base": "",
+            "fields": [
+                {
+                    "name": "owner",
+                    "type": "name"
+                },
+                {
+                    "name": "pid",
+                    "type": "uint64"
+                },
+                {
+                    "name": "cid",
+                    "type": "uint64"
+                },
+                {
+                    "name": "contractid",
+                    "type": "string"
+                },
+                {
+                    "name": "relate",
+                    "type": "bool"
                 }
             ]
         },
@@ -182,8 +350,28 @@
             "ricardian_contract": ""
         },
         {
+            "name": "burn",
+            "type": "burn",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "createnh",
+            "type": "createnh",
+            "ricardian_contract": ""
+        },
+        {
             "name": "deladmin",
             "type": "deladmin",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "delnh",
+            "type": "delnh",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "delrel",
+            "type": "delrel",
             "ricardian_contract": ""
         },
         {
@@ -197,6 +385,11 @@
             "ricardian_contract": ""
         },
         {
+            "name": "relatenh",
+            "type": "relatenh",
+            "ricardian_contract": ""
+        },
+        {
             "name": "updateperm",
             "type": "updateperm",
             "ricardian_contract": ""
@@ -206,6 +399,20 @@
         {
             "name": "admins",
             "type": "admins",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        },
+        {
+            "name": "nhassets",
+            "type": "nhassets",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        },
+        {
+            "name": "nhrelates",
+            "type": "nhrelates",
             "index_type": "i64",
             "key_names": [],
             "key_types": []
