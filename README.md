@@ -1,3 +1,5 @@
+[中文](https://github.com/Cocos-BCX/EOS-1808/blob/master/README_cn.md)
+
 # Cocos-BCX 1808 概述
 [COCOS 1808 非同质数字资产标准和世界观系统](https://github.com/Cocos-BCX/1808/blob/master/README.md)
 
